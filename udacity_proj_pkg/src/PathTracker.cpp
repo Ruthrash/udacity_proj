@@ -46,9 +46,8 @@ void PathTrackerROS::GetPath(std::string poses_file_name)
 		std::cout<<"Unable to parse file \n";
 }
 
-int PathTracker::ClosestPose()
+std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestPose(const geometry_msgs::PoseStamped &current_pose)
 {
-	geometry_msgs::PoseStamped current_pose = GetCurrentPose(); 
 	double min_dist = 1000.0; 
 	std::vector<geometry_msgs::PoseStamped>::const_iterator min_it = reference_path.poses.begin(); 
 	for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = reference_path.poses.begin(); iter != reference_path.poses.end(); ++iter)
@@ -61,26 +60,40 @@ int PathTracker::ClosestPose()
 			min_it = iter; 
 		}
 	}
-	//std::cout<<"Closest Point is "<<std::distance(reference_path.poses.begin(), min_it)<<"\n";
-	//return std::distance(reference_path.poses.begin(), min_it);
-	std::cout<<"Closest Point is "<< min_it - reference_path.poses.begin() <<"\n";
-	return min_it - reference_path.poses.begin();
+	return min_it;
+}
+
+void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it)
+{
+
+	std::vector<geometry_msgs::PoseStamped>::const_iterator lqr_it = closest_it;
+	//takes care of receding horizon 
+	while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
+	{
+		LQR::LQRControl(lqr_it);
+		++lqr_it;
+	}	 
+	//Publish current velocity command
+			//publish receding horizon path 
 }
 
 void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
-	TrackPath();
+	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
+	std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
+	TrackPath(closest_it);
 }
 
-void PathTracker::TrackPath()
-{
-	 
-	//run LQR for the time window 
-			//Linearize and calculate input gains 
-	//Publish current velocity command
-			//publish receding horizon path 
-}
+
+
+
+
+
+
+
+
+
 
 
 

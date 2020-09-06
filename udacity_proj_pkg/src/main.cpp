@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 		//_gazebo_ros.GetRobotPath();
 		//_gazebo_ros.PublishRobotPath();
 		path_tracker.PublishReferencePath();
-		path_tracker.ClosestPose();
+		//path_tracker.ClosestPose();
 		loop_rate.sleep();
 		//std::cout <<"publishin path\n";
 	}
