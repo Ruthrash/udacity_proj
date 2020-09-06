@@ -1,4 +1,3 @@
-#include <iostream>
 #include "udacity_proj_pkg/GazeboROS.h"
 #include "udacity_proj_pkg/PathTracker.h"
 

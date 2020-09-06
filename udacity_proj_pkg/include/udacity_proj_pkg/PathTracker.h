@@ -16,41 +16,8 @@
 
 
 
-
 //gazebo
 #include <gazebo_msgs/GetModelState.h>
-
-
-
-
-/*
-* @brief encapsulates the complete PathTracker object containing LQR path tracking controller and ROS related stuff through inheritance 
-*/
-class PathTracker : public LQR, public PathTrackerROS
-{
-public:
-	PathTracker();
-	PathTracker(std::string poses_file_name,  ros::NodeHandle &node_) ;
-	~PathTracker();
-
-
-private: 
-
-	/* @brief Initializes the tracker 
-	*/
-	void TrackerInit(); 
-
-	/* @brief Runs the LQR algorithm given the iterator rerence of closest point in the reference path 
-	*/
-	void TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it); 
-
-	/* @brief Finds closest pose in the path to current pose and returns its index  
-	*/
-	std::vector<geometry_msgs::PoseStamped>::const_iterator GetClosestPose(const geometry_msgs::PoseStamped &current_pose); 
-	
-};
-
-
 
 
 /*
@@ -87,10 +54,31 @@ private:
 };
 
 
+/*
+* @brief encapsulates the complete PathTracker object containing LQR path tracking controller and ROS related stuff through inheritance 
+*/
+
+class PathTracker : public LQR, public PathTrackerROS
+{
+public:
+	PathTracker();
+	PathTracker(std::string poses_file_name,  ros::NodeHandle &node_) ;
+	~PathTracker();
 
 
+private: 
 
+	/* @brief Initializes the tracker 
+	*/
+	void TrackerInit(); 
 
+	/* @brief Runs the LQR algorithm given the iterator rerence of closest point in the reference path 
+	*/
+	void TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it); 
 
-
+	/* @brief Finds closest pose in the path to current pose and returns its index  
+	*/
+	std::vector<geometry_msgs::PoseStamped>::const_iterator GetClosestPose(const geometry_msgs::PoseStamped &current_pose); 
+	
+};
 #endif

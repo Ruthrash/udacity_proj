@@ -30,7 +30,10 @@ void LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterat
 	for (int i = 0 ; i < LQR::time_window; i++ )
 	{
 		//calculate A, B 
+		//calculated K,P, u
+		 
 
 	}
+	//finally set the u vector for the current time window  
 
 }
