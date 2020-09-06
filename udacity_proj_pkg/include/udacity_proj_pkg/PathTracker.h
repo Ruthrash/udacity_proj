@@ -13,9 +13,6 @@
 
 #include "udacity_proj_pkg/LQR.h" 
 
-
-
-
 //gazebo
 #include <gazebo_msgs/GetModelState.h>
 
@@ -32,6 +29,7 @@ public:
 	void PublishReferencePath();
 	void PublishTrackedPath();
 	void GetPath(std::string poses_file_name);
+	void PublishControlCmd(CmdVel cmd_);
 
 protected:
 	nav_msgs::Path reference_path; 
@@ -64,13 +62,12 @@ public:
 	PathTracker();
 	PathTracker(std::string poses_file_name,  ros::NodeHandle &node_) ;
 	~PathTracker();
-
-
-private: 
-
 	/* @brief Initializes the tracker 
 	*/
 	void TrackerInit(); 
+
+
+private: 
 
 	/* @brief Runs the LQR algorithm given the iterator rerence of closest point in the reference path 
 	*/

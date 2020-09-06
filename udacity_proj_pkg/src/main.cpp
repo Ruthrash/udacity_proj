@@ -10,12 +10,19 @@ int main(int argc, char **argv)
 	PathTracker path_tracker(file_name, node_);
 	ros::Rate loop_rate(10);
 	ros::service::waitForService("/gazebo/get_model_state");
+	bool start_flag = false;
+	std::cout<<"going to track\n";
 	while (ros::ok())
 	{
 		ros::spinOnce();
 		//_gazebo_ros.GetRobotPath();
 		//_gazebo_ros.PublishRobotPath();
 		path_tracker.PublishReferencePath();
+		if(!start_flag)
+		{
+			path_tracker.TrackerInit();
+			start_flag = true;
+		}
 		//path_tracker.ClosestPose();
 		loop_rate.sleep();
 		//std::cout <<"publishin path\n";
