@@ -18,6 +18,7 @@ struct CmdVel
 class LQR
 {
 public:
+	LQR(const ros::NodeHandle &node_);
 	LQR();
 	~LQR();
 	/**@LQR given the reference to the initial pose of current horizon

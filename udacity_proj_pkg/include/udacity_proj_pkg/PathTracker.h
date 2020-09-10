@@ -28,6 +28,7 @@ public:
 	PathTrackerROS(ros::NodeHandle &node_);
 	void PublishReferencePath();
 	void PublishTrackedPath();
+	void PublishCurrentPose(); 
 	void GetPath(std::string poses_file_name);
 	void PublishControlCmd(CmdVel cmd_);
 
@@ -45,6 +46,7 @@ private:
 	ros::Publisher tracked_path_pub;
 	ros::Publisher receding_horiz_pub;
 	ros::Publisher cmd_vel_pub; 
+	ros::Publisher current_pose_pub; 
 	//gazebo 
 	gazebo_msgs::GetModelState robot_state;
 	ros::ServiceClient robot_state_client;
@@ -76,6 +78,10 @@ private:
 	/* @brief Finds closest pose in the path to current pose and returns its index  
 	*/
 	std::vector<geometry_msgs::PoseStamped>::const_iterator GetClosestPose(const geometry_msgs::PoseStamped &current_pose); 
+
+	/* @brief Finds distance from current pose to the goal point 
+	*/
+	double GetGoalDistance(); 	
 	
 };
 #endif

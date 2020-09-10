@@ -6,12 +6,17 @@ PathTracker::~PathTracker()
 	
 }
 
-PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_)
+PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_), LQR(node_)
 {
 
 	GetPath(poses_file_name);//loads path from text file
 	std::cout << "Poses file being parsed\n";
 	std::cout << "Contains "<<reference_path.poses.size()<<" poses \n";
+	if(reference_path.poses.size()==0)
+	{
+		std::cout<<"No poses in the path to track\n";
+		exit(0);
+	}
 }
 
 void PathTrackerROS::GetPath(std::string poses_file_name)
@@ -46,9 +51,15 @@ void PathTrackerROS::GetPath(std::string poses_file_name)
 void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
-	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
+	/*geometry_msgs::PoseStamped current_pose = GetCurrentPose();
 	std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
-	TrackPath(closest_it);
+	TrackPath(closest_it);*/
+	while(GetGoalDistance() >= 0.3)
+	{
+		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(GetCurrentPose());
+		TrackPath(closest_it);
+		//std::cout<<GetGoalDistance()<<" m \n";
+	}
 }
 
 void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it)
@@ -56,14 +67,14 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 
 	std::vector<geometry_msgs::PoseStamped>::const_iterator lqr_it = closest_it;
 	//takes care of receding horizon 
-	while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
-	{
+	//while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
+	//{
 		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose());
 		PathTrackerROS::PublishControlCmd(cmd_);
-		++lqr_it;
-		ros::Duration(0.5).sleep();
-	}	 
-	std::cout<<"Done tracking \n";
+		PathTrackerROS::PublishCurrentPose();
+		//++lqr_it;
+	//}	 
+	//std::cout<<"Done tracking \n";
 	//Publish current velocity command
 	//publish receding horizon path 
 }
@@ -86,7 +97,14 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 	return min_it;
 }
 
-
+double PathTracker::GetGoalDistance()
+{
+	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
+	double distance = pow(current_pose.pose.position.x - (reference_path.poses.end()-1)->pose.position.x , 2 ) +
+					 pow(current_pose.pose.position.y - (reference_path.poses.end()-1)->pose.position.y , 2 );
+	distance = sqrt(distance);
+	return distance; 
+}
 
 
 
@@ -103,6 +121,7 @@ PathTrackerROS::PathTrackerROS(){}
 PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
 {
 	reference_path_pub = node_.advertise<nav_msgs::Path>("/robot_reference_path", 1, true);
+	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_robot_pose", 1, true);
 	cmd_vel_pub = node_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
 
 	//gazebo
@@ -134,12 +153,26 @@ geometry_msgs::PoseStamped PathTrackerROS::GetCurrentPose()
 	return pose_;
 }
 
+
+
 void PathTrackerROS::PublishControlCmd(CmdVel cmd_)
 {
 	geometry_msgs::Twist cmd; 
 	cmd.linear.x = cmd_.v ; 
 	cmd.angular.z = cmd_.omega; 
+
+	if(abs(cmd_.v >= 2))
+		cmd.linear.x = 2*cmd_.v/abs(cmd_.v);
+	if(abs(cmd_.omega >= 2))
+		cmd.angular.z = 2*cmd_.omega/abs(cmd_.omega);
+		
 	cmd_vel_pub.publish(cmd); 
-	std::cout<<"Publishing (v,omeag) "<< cmd_.v <<", "<<cmd_.omega<<"\n";
+	//std::cout<<"Publishing (v,omeag) "<< cmd_.v <<", "<<cmd_.omega<<"\n";
 
 }
+
+void PathTrackerROS::PublishCurrentPose()
+{
+	current_pose_pub.publish(GetCurrentPose());
+}
+

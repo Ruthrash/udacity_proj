@@ -1,15 +1,21 @@
 #include "udacity_proj_pkg/LQR.h"
 
-LQR::LQR() : time_window{50}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR():
+time_window{20}, sampling_period{1},state_dimension_length{3}, input_dimension_length{2}
 {
-	//cmds_.resize(time_window + 1);//including timewindow from current pose
-	Eigen::Vector3d dummy_Q ;
-	dummy_Q << 160,160,160;
+	Eigen::VectorXd dummy_Q ;
+	dummy_Q << 50,50,150; 
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 40,120;
+	dummy_R << 50,150;
 	R = dummy_R.asDiagonal();
 }
+
+LQR::LQR(const ros::NodeHandle &node_)
+{
+	
+}
+
 
 LQR::~LQR()
 {
@@ -29,7 +35,6 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
 	cmds_.push_back(end_of_horizon_cmd);
-	std::cout<<"!!!!!!IN current Horizon!!!!!\n";
 	for (int i = 1 ; i <= LQR::time_window; i++ )//i is steps to go in LQR
 	{
 		//Linearized around the pose to go(n - (i-1))
@@ -40,20 +45,26 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		prev_P = P;
 
 		Eigen::VectorXd reference_state_vec(state_dimension_length); 
-		reference_state_vec <<(end_of_horizon_it - (i -1) )->pose.position.x , (end_of_horizon_it - (i -1) )->pose.position.y , GetYaw(end_of_horizon_it - (i -1) );
+		reference_state_vec <<  (end_of_horizon_it - (i -1) )->pose.position.x,
+								(end_of_horizon_it - (i -1) )->pose.position.y,
+		  						GetYaw(end_of_horizon_it - (i -1) );
 		Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
-		reference_cmd_vec << cmds_[i-1].v , cmds_[i-1].omega;
+		reference_cmd_vec <<cmds_[i-1].v,
+							cmds_[i-1].omega;
 		
 		Eigen::VectorXd current_state_vec(state_dimension_length);
-		current_state_vec << (end_of_horizon_it - i)->pose.position.x , (end_of_horizon_it - i)->pose.position.y , GetYaw(end_of_horizon_it - i);
+		current_state_vec <<(end_of_horizon_it - i)->pose.position.x, 
+							(end_of_horizon_it - i)->pose.position.y, 
+							GetYaw(end_of_horizon_it - i);
 		Eigen::VectorXd current_cmd_vec(input_dimension_length);
 
 		current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
+		//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
 		cmds_.push_back(current_cmd); 
 	}
-	//Linearized around the pose to go(n - (i-1))
+	//Get matrices for linearized model around the pose to go X(n - (i-1))
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
 	K = GetKMatrix(A , B , prev_P);
@@ -71,6 +82,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 
 	current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 	CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
+	//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
 
 
 
@@ -80,10 +92,10 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 Eigen::MatrixXd LQR::GetAMatrix(const std::vector<geometry_msgs::PoseStamped>::const_iterator &end_of_horizon , int steps_to_go)
 {
 	Eigen::MatrixXd A = Eigen::MatrixXd::Identity(state_dimension_length,state_dimension_length);
-	double yaw = GetYaw(end_of_horizon - steps_to_go);
+	//double yaw = GetYaw(end_of_horizon - steps_to_go);
 	
-	A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
-	A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
+	//A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
+	//A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
 	return A; 
 }
 
