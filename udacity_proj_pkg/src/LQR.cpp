@@ -9,6 +9,7 @@ time_window{20}, sampling_period{1},state_dimension_length{3}, input_dimension_l
 	Eigen::Vector2d dummy_R ;
 	dummy_R << 50,150;
 	R = dummy_R.asDiagonal();
+	std::cout<<"INITIALIZING LQR\n";
 }
 
 LQR::LQR(const ros::NodeHandle &node_)

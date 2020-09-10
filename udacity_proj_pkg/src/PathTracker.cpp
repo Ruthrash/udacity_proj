@@ -6,17 +6,12 @@ PathTracker::~PathTracker()
 	
 }
 
-PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_), LQR(node_)
+PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_)
 {
 
 	GetPath(poses_file_name);//loads path from text file
 	std::cout << "Poses file being parsed\n";
 	std::cout << "Contains "<<reference_path.poses.size()<<" poses \n";
-	if(reference_path.poses.size()==0)
-	{
-		std::cout<<"No poses in the path to track\n";
-		exit(0);
-	}
 }
 
 void PathTrackerROS::GetPath(std::string poses_file_name)

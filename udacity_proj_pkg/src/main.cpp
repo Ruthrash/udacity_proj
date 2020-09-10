@@ -5,7 +5,8 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "main_node");
 	ros::NodeHandle node_;
-	GazeboROS _gazebo_ros(node_); 
+	std::cout<<"going to track\n";
+	//GazeboROS _gazebo_ros(node_); 
 	std::string file_name = "/home/ruthz/Desktop/path.txt";
 	PathTracker path_tracker(file_name, node_);
 	ros::Rate loop_rate(10);
