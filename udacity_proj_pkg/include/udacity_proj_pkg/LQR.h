@@ -32,6 +32,7 @@ protected:
 	int time_window;
 	int state_dimension_length;
 	int input_dimension_length; 
+	double GetGoalDistance();
 
 private:
 	double sampling_period;
@@ -49,6 +50,7 @@ private:
 	//get heading angle/yaw from quartenion
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);
 	double GetYaw(const geometry_msgs::PoseStamped& current_pose);
+	
 
 };
 

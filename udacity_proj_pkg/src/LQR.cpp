@@ -1,13 +1,14 @@
 #include "udacity_proj_pkg/LQR.h"
 
-LQR::LQR():
-time_window{20}, sampling_period{1},state_dimension_length{3}, input_dimension_length{2}
+
+LQR::LQR() : time_window{40}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
 {
-	Eigen::VectorXd dummy_Q ;
-	dummy_Q << 50,50,150; 
+	//cmds_.resize(time_window + 1);//including timewindow from current pose
+	Eigen::Vector3d dummy_Q ;
+	dummy_Q << 50,50,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 50,150;
+	dummy_R << 30,90;
 	R = dummy_R.asDiagonal();
 	std::cout<<"INITIALIZING LQR\n";
 }
@@ -52,13 +53,12 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 		reference_cmd_vec <<cmds_[i-1].v,
 							cmds_[i-1].omega;
-		
+									
 		Eigen::VectorXd current_state_vec(state_dimension_length);
 		current_state_vec <<(end_of_horizon_it - i)->pose.position.x, 
 							(end_of_horizon_it - i)->pose.position.y, 
 							GetYaw(end_of_horizon_it - i);
 		Eigen::VectorXd current_cmd_vec(input_dimension_length);
-
 		current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
@@ -153,3 +153,10 @@ double LQR::GetYaw(const geometry_msgs::PoseStamped& current_pose)
 	return yaw;
 
 }
+/*
+double LQR::GetGoalDistance(const geometry_msgs::PoseStamped &p1, const geometry_msgs::PoseStamped&p2)
+{	
+	double dist = pow(p1.pose.position.x - p2.pose.position.x , 2) + pow(p1.pose.position.y - p2.pose.position.y , 2);
+	return sqrt(dist);
+
+}*/

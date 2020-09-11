@@ -8,7 +8,7 @@ PathTracker::~PathTracker()
 
 PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_)
 {
-
+	
 	GetPath(poses_file_name);//loads path from text file
 	std::cout << "Poses file being parsed\n";
 	std::cout << "Contains "<<reference_path.poses.size()<<" poses \n";
@@ -46,15 +46,15 @@ void PathTrackerROS::GetPath(std::string poses_file_name)
 void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
-	/*geometry_msgs::PoseStamped current_pose = GetCurrentPose();
-	std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
-	TrackPath(closest_it);*/
-	while(GetGoalDistance() >= 0.3)
+	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
+	//while(LQR::Distance(current_pose,*(reference_path.poses.end()-1)) >  0.5 )
+	while(GetGoalDistance() >  0.5 )
 	{
-		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(GetCurrentPose());
+		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
 		TrackPath(closest_it);
-		//std::cout<<GetGoalDistance()<<" m \n";
+		current_pose = GetCurrentPose();
 	}
+	
 }
 
 void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it)
@@ -62,9 +62,10 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 
 	std::vector<geometry_msgs::PoseStamped>::const_iterator lqr_it = closest_it;
 	//takes care of receding horizon 
+
 	//while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
 	//{
-		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose());
+		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose());//for one time horizon
 		PathTrackerROS::PublishControlCmd(cmd_);
 		PathTrackerROS::PublishCurrentPose();
 		//++lqr_it;
@@ -101,20 +102,10 @@ double PathTracker::GetGoalDistance()
 	return distance; 
 }
 
-
-
-
-
-
-
-
-
-
-
-
 PathTrackerROS::PathTrackerROS(){}
 PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
-{
+{	
+	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
 	reference_path_pub = node_.advertise<nav_msgs::Path>("/robot_reference_path", 1, true);
 	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_robot_pose", 1, true);
 	cmd_vel_pub = node_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
@@ -170,4 +161,6 @@ void PathTrackerROS::PublishCurrentPose()
 {
 	current_pose_pub.publish(GetCurrentPose());
 }
+
+
 
