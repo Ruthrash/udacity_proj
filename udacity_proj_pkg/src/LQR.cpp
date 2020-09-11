@@ -1,15 +1,15 @@
 #include "udacity_proj_pkg/LQR.h"
 
 
-LQR::LQR(const ros::NodeHandle &node_) : time_window{30}, sampling_period{2} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} , state_dimension_length{3}, input_dimension_length{2}
 {
 	//cmds_.resize(time_window + 1);//including timewindow from current pose
-	Eigen::Vector3d dummy_Q ;
+	/*Eigen::Vector3d dummy_Q ;
 	dummy_Q <<70,70,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
 	dummy_R << 30,120;
-	R = dummy_R.asDiagonal();
+	R = dummy_R.asDiagonal();*/
 	
 	std::string dummy;
 	
@@ -27,12 +27,18 @@ LQR::LQR(const ros::NodeHandle &node_) : time_window{30}, sampling_period{2} , s
 	state_dimension_length = ParseParam::ConvertStringToDouble(dummy);
 
 	node_.getParam("sampling_period", dummy);
-	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
+	sampling_period = ParseParam::ConvertStringToDouble(dummy);
 		
 	node_.getParam("input_dimension_length", dummy);
 	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
 
-	//std::cout<<"!!!PARAMSS!!!"<<dummy<<"\n";
+	std::cout<<"!!!PARAMSS!!!"<<input_dimension_length<<",\n"
+							  <<state_dimension_length<<",\n"
+							  <<sampling_period<<",\n"
+							  <<time_window<<",\n"
+							  <<Q<<",\n"
+							  <<R<<"\n";
+
 }
 
 LQR::LQR()/*:time_window(node_.param<std::string>("time_window", "")),
