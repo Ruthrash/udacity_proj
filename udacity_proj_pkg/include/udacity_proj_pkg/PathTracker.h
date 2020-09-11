@@ -30,7 +30,7 @@ public:
 	void PublishTrackedPath();
 	void PublishCurrentPose();
 	void GetPath(std::string poses_file_name);
-	void PublishRecedingHorizon();
+	void PublishRecedingHorizon(const nav_msgs::Path &receding_horiz_path);
 	void PublishControlCmd(CmdVel cmd_);
 
 protected:
@@ -53,7 +53,6 @@ private:
 
 	gazebo_msgs::GetModelState robot_state;
 	ros::ServiceClient robot_state_client;
-	nav_msgs::Path GetRecedingHorizon();
 	
 };
 

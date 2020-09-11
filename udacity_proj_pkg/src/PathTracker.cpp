@@ -111,6 +111,7 @@ PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
 	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
 	cmd_vel_pub = node_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
 	tracked_path_pub = node_.advertise<nav_msgs::Path>("/tracked_path", 1, true);
+	receding_horiz_pub = node_.advertise<nav_msgs::Path>("/receding_horizon_path", 1, true); 
 
 	//gazebo
     robot_state_client = node_.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
@@ -166,6 +167,12 @@ void PathTrackerROS::PublishControlCmd(CmdVel cmd_)
 void PathTrackerROS::PublishCurrentPose()
 {
 	current_pose_pub.publish(PathTrackerROS::GetCurrentPose());
+} 
+
+
+void PathTrackerROS::PublishRecedingHorizon(const nav_msgs::Path & receding_horiz_path)
+{
+	receding_horiz_pub.publish(receding_horiz_path);
 }
 
 

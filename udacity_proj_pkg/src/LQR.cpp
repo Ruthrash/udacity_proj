@@ -1,16 +1,15 @@
 #include "udacity_proj_pkg/LQR.h"
 
 
-LQR::LQR() : time_window{20}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR() : time_window{50}, sampling_period{1} , state_dimension_length{3}, input_dimension_length{2}
 {
 	//cmds_.resize(time_window + 1);//including timewindow from current pose
 	Eigen::Vector3d dummy_Q ;
-	dummy_Q << 50,50,150;
+	dummy_Q << 30,30,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 40,120;
+	dummy_R << 40,160;
 	R = dummy_R.asDiagonal();
-	std::cout<<"INITIALIZING LQR\n";
 }
 
 LQR::LQR(const ros::NodeHandle &node_)
@@ -64,6 +63,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
 		//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
 		cmds_.push_back(current_cmd); 
+		std::cout<<"Size="<<cmds_.size()<<"\n";
 	}
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
@@ -83,10 +83,11 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 
 	current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 	CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
+	cmds_.push_back(current_cmd);
 	//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
 
 
-
+	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }
 
@@ -160,3 +161,8 @@ double LQR::GetGoalDistance(const geometry_msgs::PoseStamped &p1, const geometry
 	return sqrt(dist);
 
 }*/
+
+nav_msgs::Path LQR::GetRecedingHorizon()
+{
+	
+}

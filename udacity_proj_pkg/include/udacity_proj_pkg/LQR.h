@@ -33,6 +33,7 @@ protected:
 	int state_dimension_length;
 	int input_dimension_length; 
 	double GetGoalDistance();
+	nav_msgs::Path GetRecedingHorizon();
 
 private:
 	double sampling_period;
