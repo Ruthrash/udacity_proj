@@ -1,14 +1,14 @@
 #include "udacity_proj_pkg/LQR.h"
 
 
-LQR::LQR() : time_window{40}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR() : time_window{20}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
 {
 	//cmds_.resize(time_window + 1);//including timewindow from current pose
 	Eigen::Vector3d dummy_Q ;
 	dummy_Q << 50,50,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 30,90;
+	dummy_R << 40,120;
 	R = dummy_R.asDiagonal();
 	std::cout<<"INITIALIZING LQR\n";
 }

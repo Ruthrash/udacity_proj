@@ -51,7 +51,7 @@ void PathTracker::TrackerInit()
 	while(GetGoalDistance() >  0.5 )
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
-		TrackPath(closest_it);
+		TrackPath(closest_it+1);
 		current_pose = GetCurrentPose();
 	}
 	
@@ -67,7 +67,8 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	//{
 		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose());//for one time horizon
 		PathTrackerROS::PublishControlCmd(cmd_);
-		PathTrackerROS::PublishCurrentPose();
+		//PathTrackerROS::PublishCurrentPose();
+		PathTrackerROS::PublishTrackedPath();
 		//++lqr_it;
 	//}	 
 	//std::cout<<"Done tracking \n";
@@ -106,9 +107,10 @@ PathTrackerROS::PathTrackerROS(){}
 PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
 {	
 	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
-	reference_path_pub = node_.advertise<nav_msgs::Path>("/robot_reference_path", 1, true);
-	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_robot_pose", 1, true);
+	reference_path_pub = node_.advertise<nav_msgs::Path>("/reference_path", 1, true);
+	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
 	cmd_vel_pub = node_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
+	tracked_path_pub = node_.advertise<nav_msgs::Path>("/tracked_path", 1, true);
 
 	//gazebo
     robot_state_client = node_.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
@@ -124,8 +126,12 @@ void PathTrackerROS::PublishReferencePath()
 	reference_path_pub.publish(reference_path);
 	//std::cout<<"Publishing Path\n";
 }
-void PublishTrackedPath()
+void PathTrackerROS::PublishTrackedPath()
 {
+	tracked_path.poses.push_back(GetCurrentPose());
+	tracked_path.header.stamp = ros::Time::now();
+	tracked_path.header.frame_id = "odom";
+	tracked_path_pub.publish(tracked_path);
 
 }
 
@@ -145,13 +151,13 @@ void PathTrackerROS::PublishControlCmd(CmdVel cmd_)
 {
 	geometry_msgs::Twist cmd; 
 	cmd.linear.x = cmd_.v ; 
-	cmd.angular.z = cmd_.omega; 
+	cmd.angular.z = cmd_.omega; 	
 
 	if(abs(cmd_.v >= 2))
 		cmd.linear.x = 2*cmd_.v/abs(cmd_.v);
 	if(abs(cmd_.omega >= 2))
 		cmd.angular.z = 2*cmd_.omega/abs(cmd_.omega);
-		
+
 	cmd_vel_pub.publish(cmd); 
 	//std::cout<<"Publishing (v,omeag) "<< cmd_.v <<", "<<cmd_.omega<<"\n";
 
@@ -159,7 +165,7 @@ void PathTrackerROS::PublishControlCmd(CmdVel cmd_)
 
 void PathTrackerROS::PublishCurrentPose()
 {
-	current_pose_pub.publish(GetCurrentPose());
+	current_pose_pub.publish(PathTrackerROS::GetCurrentPose());
 }
 
 
