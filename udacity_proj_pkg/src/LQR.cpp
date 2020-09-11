@@ -25,6 +25,7 @@ LQR::~LQR()
 
 CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it, const geometry_msgs::PoseStamped &current_pose)
 {
+	std::vector<Eigen::VectorXd> predicted_path; 
 	Eigen::MatrixXd prev_P;//closed loop cost function's weight matrix 
 	//Eigen::MatrixXd K;//state feedback gain matrix
 	Eigen::MatrixXd A;
@@ -62,6 +63,11 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
 		//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
+		Eigen::VectorXd predicted_pose_vec(state_dimension_length);
+		predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+
+		predicted_path.push_back(predicted_pose_vec);
+
 		cmds_.push_back(current_cmd); 
 		std::cout<<"Size="<<cmds_.size()<<"\n";
 	}
@@ -83,6 +89,14 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 
 	current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 	CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
+
+	Eigen::VectorXd predicted_pose_vec(state_dimension_length);
+	predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+
+	predicted_path.push_back(predicted_pose_vec);
+	predicted_path.push_back(current_state_vec);
+	receding_horiz_path = GetRecedingHorizon(predicted_path);
+	
 	cmds_.push_back(current_cmd);
 	//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
 
@@ -162,7 +176,28 @@ double LQR::GetGoalDistance(const geometry_msgs::PoseStamped &p1, const geometry
 
 }*/
 
-nav_msgs::Path LQR::GetRecedingHorizon()
+nav_msgs::Path LQR::GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path)
 {
-	
+	nav_msgs::Path receding_horiz;
+	geometry_msgs::PoseStamped pose_; 
+	for(int i = predicted_path.size()-1 ; i >=0 ; --i)
+	{
+		pose_.header.frame_id = "/odom";
+		pose_.header.stamp = ros::Time::now();
+		pose_.pose.position.x = predicted_path[i][0];
+		pose_.pose.position.y = predicted_path[i][1];
+
+		tf::Matrix3x3 dummy_mat;
+		dummy_mat.setEulerYPR(predicted_path[i][2], 0.0, 0.0);
+		tf::Quaternion q_;
+		dummy_mat.getRotation(q_);
+		pose_.pose.orientation.x = q_.getX();
+		pose_.pose.orientation.y = q_.getY();
+		pose_.pose.orientation.z = q_.getZ();
+		pose_.pose.orientation.w = q_.getW();
+
+		receding_horiz.poses.push_back(pose_);
+	}
+	receding_horiz.header = pose_.header;
+	return receding_horiz;
 }

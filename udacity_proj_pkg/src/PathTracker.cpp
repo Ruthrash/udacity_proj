@@ -69,6 +69,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 		PathTrackerROS::PublishControlCmd(cmd_);
 		//PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
+		PathTrackerROS::PublishRecedingHorizon(LQR::receding_horiz_path);
 		//++lqr_it;
 	//}	 
 	//std::cout<<"Done tracking \n";
@@ -83,7 +84,8 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 	std::vector<geometry_msgs::PoseStamped>::const_iterator min_it = reference_path.poses.begin(); 
 	for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = reference_path.poses.begin(); iter != reference_path.poses.end(); ++iter)
 	{
-		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + pow(iter->pose.position.y - current_pose.pose.position.y, 2) ;
+		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + 
+					pow(iter->pose.position.y - current_pose.pose.position.y, 2) ;
 		dist = sqrt(dist);
 		if(dist < min_dist)
 		{
@@ -106,7 +108,6 @@ double PathTracker::GetGoalDistance()
 PathTrackerROS::PathTrackerROS(){}
 PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
 {	
-	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
 	reference_path_pub = node_.advertise<nav_msgs::Path>("/reference_path", 1, true);
 	current_pose_pub = node_.advertise<geometry_msgs::PoseStamped>("/current_pose", 1, true);
 	cmd_vel_pub = node_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);

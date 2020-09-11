@@ -36,7 +36,6 @@ public:
 protected:
 	nav_msgs::Path reference_path; 
 	nav_msgs::Path tracked_path;
-	nav_msgs::Path receding_horiz;
 	geometry_msgs::Twist cmd_vel;
 	geometry_msgs::PoseStamped GetCurrentPose();
 	
