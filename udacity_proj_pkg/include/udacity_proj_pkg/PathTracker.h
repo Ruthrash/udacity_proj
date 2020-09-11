@@ -28,6 +28,7 @@ public:
 	PathTrackerROS(ros::NodeHandle &node_);
 	void PublishReferencePath();
 	void PublishTrackedPath();
+	void PublishCurrentPose();
 	void GetPath(std::string poses_file_name);
 	void PublishControlCmd(CmdVel cmd_);
 
@@ -45,7 +46,9 @@ private:
 	ros::Publisher tracked_path_pub;
 	ros::Publisher receding_horiz_pub;
 	ros::Publisher cmd_vel_pub; 
-	//gazebo 
+	ros::Publisher current_pose_pub;
+	
+	//gazebo for ground-truth pose
 	gazebo_msgs::GetModelState robot_state;
 	ros::ServiceClient robot_state_client;
 	

@@ -1,13 +1,13 @@
 #include "udacity_proj_pkg/LQR.h"
 
-LQR::LQR() : time_window{50}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR() : time_window{40}, sampling_period{0.5} , state_dimension_length{3}, input_dimension_length{2}
 {
 	//cmds_.resize(time_window + 1);//including timewindow from current pose
 	Eigen::Vector3d dummy_Q ;
-	dummy_Q << 160,160,160;
+	dummy_Q << 50,50,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 40,120;
+	dummy_R << 30,90;
 	R = dummy_R.asDiagonal();
 }
 
@@ -138,5 +138,12 @@ double LQR::GetYaw(const geometry_msgs::PoseStamped& current_pose)
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
 	return yaw;
+
+}
+
+double LQR::Distance(const geometry_msgs::PoseStamped &p1, const geometry_msgs::PoseStamped&p2)
+{	
+	double dist = pow(p1.pose.position.x - p2.pose.position.x , 2) + pow(p1.pose.position.y - p2.pose.position.y , 2);
+	return sqrt(dist);
 
 }
