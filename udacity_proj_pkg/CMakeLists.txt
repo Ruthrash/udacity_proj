@@ -138,6 +138,7 @@ add_library(${PROJECT_NAME}
   "src/GazeboROS.cpp"
   "src/PathTracker.cpp"
   "src/LQR.cpp"
+  "src/ParseParam.cpp"
 )
 
 add_dependencies(${PROJECT_NAME}
@@ -176,6 +177,17 @@ add_executable(pathtracker
 )
 
 target_link_libraries(pathtracker
+  ${PROJECT_NAME}
+  ${EXTERNAL_LIBS}
+  ${catkin_LIBRARIES}
+)
+
+#Build ParseParam class
+add_executable(parseparam
+  "src/ParseParam.cpp"
+)
+
+target_link_libraries(parseparam
   ${PROJECT_NAME}
   ${EXTERNAL_LIBS}
   ${catkin_LIBRARIES}

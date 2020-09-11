@@ -1,20 +1,52 @@
 #include "udacity_proj_pkg/LQR.h"
 
 
-LQR::LQR() : time_window{50}, sampling_period{1} , state_dimension_length{3}, input_dimension_length{2}
+LQR::LQR(const ros::NodeHandle &node_) : time_window{30}, sampling_period{2} , state_dimension_length{3}, input_dimension_length{2}
 {
 	//cmds_.resize(time_window + 1);//including timewindow from current pose
 	Eigen::Vector3d dummy_Q ;
-	dummy_Q << 30,30,150;
+	dummy_Q <<70,70,150;
 	Q = dummy_Q.asDiagonal();
 	Eigen::Vector2d dummy_R ;
-	dummy_R << 40,160;
+	dummy_R << 30,120;
 	R = dummy_R.asDiagonal();
+	
+	std::string dummy;
+	
+	node_.getParam("R_matrix_diag", dummy);
+	R = ParseParam::ConvertStringToDiagMatrix(dummy);
+
+	
+	node_.getParam("Q_matrix_diag", dummy);
+	Q = ParseParam::ConvertStringToDiagMatrix(dummy);
+	
+	node_.getParam("time_window", dummy);
+	time_window = ParseParam::ConvertStringToDouble(dummy);
+
+	node_.getParam("state_dimension_length", dummy);
+	state_dimension_length = ParseParam::ConvertStringToDouble(dummy);
+
+	node_.getParam("sampling_period", dummy);
+	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
+		
+	node_.getParam("input_dimension_length", dummy);
+	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
+
+	//std::cout<<"!!!PARAMSS!!!"<<dummy<<"\n";
 }
 
-LQR::LQR(const ros::NodeHandle &node_)
+LQR::LQR()/*:time_window(node_.param<std::string>("time_window", "")),
+										sampling_period(node_.param<std::string>("sampling_period", "")), 
+										state_dimension_length(node_.param<std::string>("state_dimension_length", "")), 
+										input_dimension_length(node_.param<std::string>("input_dimension_length", ""))*/
+
 {
-	
+	/*time_window = node_.param<std::string>("time_window", "");
+	sampling_period = node_.param<std::string>("sampling_period", ""); 
+	state_dimension_length = node_.param<std::string>("state_dimension_length", ""); 
+	input_dimension_length = node_.param<std::string>("input_dimension_length", "");*/
+// = node_.param<std::string>("time_window", ""); 
+ 
 }
 
 
@@ -69,7 +101,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		predicted_path.push_back(predicted_pose_vec);
 
 		cmds_.push_back(current_cmd); 
-		std::cout<<"Size="<<cmds_.size()<<"\n";
+		//std::cout<<"Size="<<cmds_.size()<<"\n";
 	}
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);

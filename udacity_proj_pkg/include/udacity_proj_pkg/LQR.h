@@ -1,7 +1,7 @@
 #ifndef LQR_H
 #define LQR_H
 
-#include <Eigen/Dense>
+#include "udacity_proj_pkg/ParseParam.h"
 #include <nav_msgs/Path.h>
 #include <iterator>
 #include <geometry_msgs/PoseStamped.h>
@@ -15,7 +15,7 @@ struct CmdVel
 	double omega; 
 };
 
-class LQR
+class LQR : public ParseParam
 {
 public:
 	LQR(const ros::NodeHandle &node_);

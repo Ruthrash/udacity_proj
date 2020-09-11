@@ -6,7 +6,7 @@ PathTracker::~PathTracker()
 	
 }
 
-PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_)
+PathTracker::PathTracker(std::string poses_file_name, ros::NodeHandle &node_) : PathTrackerROS(node_),LQR(node_)
 {
 	
 	GetPath(poses_file_name);//loads path from text file
@@ -23,7 +23,6 @@ void PathTrackerROS::GetPath(std::string poses_file_name)
 		std::string line, word;
 		while (std::getline(poses_file, line))
 		{
-			std::cout<<"getting line \n";
 			geometry_msgs::PoseStamped pose_;
 			std::istringstream ss(line);
 			//std::cout<<line<<"\n";		
@@ -51,7 +50,7 @@ void PathTracker::TrackerInit()
 	while(GetGoalDistance() >  0.5 )
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
-		TrackPath(closest_it+1);
+		TrackPath(closest_it);
 		current_pose = GetCurrentPose();
 	}
 	
