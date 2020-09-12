@@ -13,7 +13,8 @@ public:
 	ParseParam();
 	~ParseParam();
 
-   Eigen::MatrixXd ConvertStringToDiagMatrix( std::string &string_);
+protected:
+   Eigen::MatrixXd ConvertStringToDiagMatrix(std::string &string_);
    double ConvertStringToDouble(const std::string &string_);
      
 	

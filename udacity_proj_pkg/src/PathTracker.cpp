@@ -60,11 +60,12 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 {
 
 	std::vector<geometry_msgs::PoseStamped>::const_iterator lqr_it = closest_it;
+	std::cout<<"closest"<<closest_it-reference_path.poses.begin()<<"\n";
 	//takes care of receding horizon 
 
 	//while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
 	//{
-		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose());//for one time horizon
+		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose(),closest_it-reference_path.poses.begin());//for one time horizon
 		PathTrackerROS::PublishControlCmd(cmd_);
 		//PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
@@ -92,6 +93,8 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 			min_it = iter; 
 		}
 	}
+	std::cout<<"Min dist "<<min_dist<<"\n";
+	std::cout<<"Closest  "<<int(min_it - reference_path.poses.begin())<<"\n";
 	return min_it;
 }
 

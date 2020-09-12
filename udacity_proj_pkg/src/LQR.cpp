@@ -61,7 +61,9 @@ LQR::~LQR()
 
 }
 
-CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it, const geometry_msgs::PoseStamped &current_pose)
+CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it,
+ 										const geometry_msgs::PoseStamped &current_pose, 
+										const int &closest_idx)
 {
 	std::vector<Eigen::VectorXd> predicted_path; 
 	Eigen::MatrixXd prev_P;//closed loop cost function's weight matrix 
@@ -71,6 +73,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	Eigen::MatrixXd K;
 	Eigen::MatrixXd P;
 
+	//if(closest_idx > )
 	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_it + LQR::time_window; 
 	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
