@@ -118,7 +118,7 @@ PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)
 
 	//gazebo
     robot_state_client = node_.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
-	robot_state.request.model_name = "/";//_node.param<std::string>("robot_model_name", "");;
+	robot_state.request.model_name = "jackal";//_node.param<std::string>("robot_model_name", "");;
 	robot_state.request.relative_entity_name = "";
 } 
 PathTrackerROS::~PathTrackerROS(){}
