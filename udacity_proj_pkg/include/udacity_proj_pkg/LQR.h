@@ -54,6 +54,7 @@ private:
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);
 	double GetYaw(const geometry_msgs::PoseStamped& current_pose);
 	nav_msgs::Path GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path);
+	std::vector<Eigen::VectorXd> GetPredictedPath(const std::vector<Eigen::VectorXd> &states_ )
 };
 
 

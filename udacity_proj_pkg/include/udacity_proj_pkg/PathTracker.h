@@ -84,6 +84,9 @@ private:
 	/* @brief Finds distance from current pose to the goal point 
 	*/
 	double GetGoalDistance(); 	
+    /* @brief Finds yaw from quartenion
+	*/
+	double GetYawFromQuart(const geometry_msgs::PoseStamped &msg);
 	
 };
 #endif

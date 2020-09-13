@@ -80,12 +80,15 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 
 std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestPose(const geometry_msgs::PoseStamped &current_pose)
 {
-	double min_dist = 1000.0; 
+	double min_dist = 100000.0; 
 	std::vector<geometry_msgs::PoseStamped>::const_iterator min_it = reference_path.poses.begin(); 
 	for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = reference_path.poses.begin(); iter != reference_path.poses.end(); ++iter)
 	{
+
+		
 		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + 
-					pow(iter->pose.position.y - current_pose.pose.position.y, 2) ;
+					pow(iter->pose.position.y - current_pose.pose.position.y, 2) + 
+					abs(GetYawFromQuart(*iter) - GetYawFromQuart(current_pose) );
 		dist = sqrt(dist);
 		if(dist < min_dist)
 		{
@@ -106,6 +109,21 @@ double PathTracker::GetGoalDistance()
 	distance = sqrt(distance);
 	return distance; 
 }
+
+double PathTracker::GetYawFromQuart(const geometry_msgs::PoseStamped &msg)
+{
+		tf::Quaternion q(msg.pose.orientation.x,
+						msg.pose.orientation.y,
+						msg.pose.orientation.z,
+						msg.pose.orientation.w);
+		tf::Matrix3x3 m(q);
+		double roll, pitch, yaw;
+		m.getRPY(roll, pitch, yaw);
+		return yaw; 
+}
+
+
+
 
 PathTrackerROS::PathTrackerROS(){}
 PathTrackerROS::PathTrackerROS(ros::NodeHandle &node_)

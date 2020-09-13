@@ -41,28 +41,13 @@ LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} ,
 
 }
 
-LQR::LQR()/*:time_window(node_.param<std::string>("time_window", "")),
-										sampling_period(node_.param<std::string>("sampling_period", "")), 
-										state_dimension_length(node_.param<std::string>("state_dimension_length", "")), 
-										input_dimension_length(node_.param<std::string>("input_dimension_length", ""))*/
-
-{
-	/*time_window = node_.param<std::string>("time_window", "");
-	sampling_period = node_.param<std::string>("sampling_period", ""); 
-	state_dimension_length = node_.param<std::string>("state_dimension_length", ""); 
-	input_dimension_length = node_.param<std::string>("input_dimension_length", "");*/
-// = node_.param<std::string>("time_window", ""); 
- 
-}
-
-
+LQR::LQR(){}
 LQR::~LQR()
 {
 
 }
 
-CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it,
- 										const geometry_msgs::PoseStamped &current_pose, 
+CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it, const geometry_msgs::PoseStamped &current_pose, 
 										const int &closest_idx)
 {
 	std::vector<Eigen::VectorXd> predicted_path; 
@@ -78,6 +63,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
 	cmds_.push_back(end_of_horizon_cmd);
+	std::vector<Eigen::VectorXd> states_;
 	for (int i = 1 ; i <= LQR::time_window; i++ )//i is steps to go in LQR
 	{
 		//Linearized around the pose to go(n - (i-1))
@@ -103,11 +89,13 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
-		//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
-		Eigen::VectorXd predicted_pose_vec(state_dimension_length);
-		predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+		states_.push_back(current_state_vec);
 
-		predicted_path.push_back(predicted_pose_vec);
+		//std::cout<<"command"<<current_cmd.v<<", "<<current_cmd.omega<<"\n";
+		//Eigen::VectorXd predicted_pose_vec(state_dimension_length);
+		//predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+
+		//predicted_path.push_back(predicted_pose_vec);
 
 		cmds_.push_back(current_cmd); 
 		//std::cout<<"Size="<<cmds_.size()<<"\n";
@@ -131,11 +119,11 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 	CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
 
-	Eigen::VectorXd predicted_pose_vec(state_dimension_length);
-	predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
-
-	predicted_path.push_back(predicted_pose_vec);
-	predicted_path.push_back(current_state_vec);
+	//Eigen::VectorXd predicted_pose_vec(state_dimension_length);
+	//predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+	states_.push_back(current_state_vec);
+	//predicted_path.push_back(predicted_pose_vec);
+	//predicted_path.push_back(current_state_vec);
 	receding_horiz_path = GetRecedingHorizon(predicted_path);
 	
 	cmds_.push_back(current_cmd);
@@ -241,4 +229,14 @@ nav_msgs::Path LQR::GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predi
 	}
 	receding_horiz.header = pose_.header;
 	return receding_horiz;
+}
+
+std::vector<Eigen::VectorXd> LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_ )
+{
+	std::vector<Eigen::VectorXd> predicted_path;
+
+
+	Eigen::VectorXd predicted_pose_vec(state_dimension_length);
+	predicted_pose_vec = A*current_state_vec + B*current_cmd_vec;
+	
 }
