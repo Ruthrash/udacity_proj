@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 	std::string file_name = "/home/ruthz/Desktop/path.txt";
 	PathTracker path_tracker(file_name, node_);
 	ros::Rate loop_rate(10);
-	ros::service::waitForService("/gazebo/get_model_state");
+	ros::service::waitForService("/jackal_velocity_controller/set_parameters");
 	bool start_flag = false;
 	std::cout<<"going to track\n";
 	while (ros::ok())

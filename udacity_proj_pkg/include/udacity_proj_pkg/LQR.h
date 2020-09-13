@@ -6,8 +6,27 @@
 #include <iterator>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
+#include <thread>
+#include <algorithm>
 
+#include <vector>
+#include <future>
+#include <mutex>
+#include <memory>
 
+template <class T>
+class MessageQueue
+{
+public:
+	void Send(T &&msg);
+	T Receive();
+private:
+	std::deque<T> _queue;
+	std::condition_variable _cond; 
+	std::mutex _mtx;  
+
+    
+};
 
 struct CmdVel
 {
@@ -26,6 +45,7 @@ public:
 	CmdVel LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it,
 					 const geometry_msgs::PoseStamped &current_pose,
 					 const int &closest_idx);
+	MessageQueue<nav_msgs::Path> message_queue;
 
 	//void Linearize(const geometry_msgs::PoseStamped &pose_, const nav_msgs::Path &reference_path);
 
@@ -36,6 +56,8 @@ protected:
 	int input_dimension_length; 
 	double GetGoalDistance();
 	nav_msgs::Path receding_horiz_path; 
+	
+	
 
 private:
 	double sampling_period;
@@ -54,7 +76,7 @@ private:
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);
 	double GetYaw(const geometry_msgs::PoseStamped& current_pose);
 	nav_msgs::Path GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path);
-	std::vector<Eigen::VectorXd> GetPredictedPath(const std::vector<Eigen::VectorXd> &states_ , const std::vector<CmdVel> &cmds_,
+	void GetPredictedPath(const std::vector<Eigen::VectorXd> &states_ , const std::vector<CmdVel> cmds,
 													const std::vector<Eigen::MatrixXd> &A_vec, const std::vector<Eigen::MatrixXd> &B_vec );
 };
 

@@ -32,7 +32,7 @@ LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} ,
 	node_.getParam("input_dimension_length", dummy);
 	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
 
-	std::cout<<"!!!PARAMSS!!!"<<input_dimension_length<<",\n"
+	std::cout<<"!!!PARAMSS!!!\n"<<input_dimension_length<<",\n"
 							  <<state_dimension_length<<",\n"
 							  <<sampling_period<<",\n"
 							  <<time_window<<",\n"
@@ -117,9 +117,9 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	states_.push_back(current_state_vec);
 	cmds_.push_back(current_cmd);
 	A_vec.push_back(A); B_vec.push_back(B);
-	
-	receding_horiz_path = GetRecedingHorizon(GetPredictedPath(states_, cmds_, A_vec , B_vec));
 
+	//start a thread to compute receding_horiz_path and it also sends the receding horizon path to the message queue
+	std::thread t1(&LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec);
 	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }
@@ -128,7 +128,6 @@ Eigen::MatrixXd LQR::GetAMatrix(const std::vector<geometry_msgs::PoseStamped>::c
 {
 	Eigen::MatrixXd A = Eigen::MatrixXd::Identity(state_dimension_length,state_dimension_length);
 	//double yaw = GetYaw(end_of_horizon - steps_to_go);
-	
 	//A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
 	//A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
 	return A; 
@@ -187,13 +186,6 @@ double LQR::GetYaw(const geometry_msgs::PoseStamped& current_pose)
 	return yaw;
 
 }
-/*
-double LQR::GetGoalDistance(const geometry_msgs::PoseStamped &p1, const geometry_msgs::PoseStamped&p2)
-{	
-	double dist = pow(p1.pose.position.x - p2.pose.position.x , 2) + pow(p1.pose.position.y - p2.pose.position.y , 2);
-	return sqrt(dist);
-
-}*/
 
 nav_msgs::Path LQR::GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path)
 {
@@ -221,20 +213,65 @@ nav_msgs::Path LQR::GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predi
 	return receding_horiz;
 }
 
-std::vector<Eigen::VectorXd> LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_, const std::vector<CmdVel> &cmds_,
+
+//this should start in a thread and send to the message queue once done
+void LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_, const std::vector<CmdVel> cmds,
 													const std::vector<Eigen::MatrixXd> &A_vec, const std::vector<Eigen::MatrixXd> &B_vec )
 {
-	std::vector<Eigen::VectorXd> predicted_path;
-	std::cout<<"Sizes!!"<<states_.size()<<","<<cmds_[0].v<<","<<cmds_[0].omega<<"\n";
+	std::vector<Eigen::VectorXd> predicted_path_eig;
+	std::cout<<"Sizes!!"<<states_.size()<<","<<cmds.size()<<"\n";
 	for(int i = 0; i < states_.size(); ++i)
 	{
 		Eigen::VectorXd predicted_pose_vec(state_dimension_length), current_cmd_vec(input_dimension_length);
-		current_cmd_vec << cmds_[i+1].v , cmds_[i+1].omega;//since cmds_ contains (0,0) input command as well. pushed at line 64
+		current_cmd_vec << cmds[i+1].v , cmds[i+1].omega;//since cmds_ contains (0,0) input command as well. pushed at line 64
 		predicted_pose_vec = A_vec[i] * states_[i] + B_vec[i] * current_cmd_vec;
-		predicted_path.push_back(predicted_pose_vec);
+		predicted_path_eig.push_back(predicted_pose_vec);
 	}
-	predicted_path.push_back(*(states_.end()-1));
+	predicted_path_eig.push_back(*(states_.end()-1));
 
-	return predicted_path;
+	nav_msgs::Path receding_horiz_path = GetRecedingHorizon(predicted_path_eig);
+	std::cout<<"Sending!!\n";
+	message_queue.Send(std::move (receding_horiz_path));
 	
 }
+
+
+
+/* Implementation of class "MessageQueue" */
+
+
+template <typename T>
+T MessageQueue<T>::Receive()
+{
+    // FP.5a : The method receive should use std::unique_lock<std::mutex> and _condition.wait() 
+    // to wait for and receive new messages and pull them from the queue using move semantics. 
+    // The received object should then be returned by the receive function. 
+    // perform queue modification under the lock
+    std::unique_lock<std::mutex> uLock(_mtx);
+    _cond.wait(uLock, [this] { return !_queue.empty(); }); // pass unique lock to condition variable
+
+    // remove last vector element from queue
+    T msg = std::move(_queue.back());
+    _queue.pop_back();
+
+    return msg; // will not be copied due to return value optimization (RVO) in C++
+}
+
+template <typename T>
+void MessageQueue<T>::Send(T &&msg)
+{
+    // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
+    // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
+    // perform vector modification under the lock
+    std::lock_guard<std::mutex> uLock(_mtx);
+
+    // add vector to queue
+    //std::cout << "   Message " << msg << " has been sent to the queue" << std::endl;
+    //_queue.push_back(std::move(msg));
+    _queue.push_back(msg);
+    _cond.notify_one(); // notify client after pushing new Vehicle into vector
+}
+
+
+
+template class MessageQueue<nav_msgs::Path>;

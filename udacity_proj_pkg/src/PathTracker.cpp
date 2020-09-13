@@ -1,6 +1,7 @@
 #include "udacity_proj_pkg/PathTracker.h"
 
 
+
 PathTracker::~PathTracker()
 {
 	
@@ -46,7 +47,7 @@ void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
-	//while(LQR::Distance(current_pose,*(reference_path.poses.end()-1)) >  0.5 )
+	std::cout<<"Received "<<current_pose.pose.position.x<<","<<current_pose.pose.position.y<<"\n";
 	while(GetGoalDistance() >  0.5 )
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
@@ -59,22 +60,19 @@ void PathTracker::TrackerInit()
 void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it)
 {
 
-	std::vector<geometry_msgs::PoseStamped>::const_iterator lqr_it = closest_it;
-	std::cout<<"closest"<<closest_it-reference_path.poses.begin()<<"\n";
-	//takes care of receding horizon 
+	// start a receding horiz publish thread that waits for receding_horiz_path to be ready and publishes it
+	std::thread t1(&PathTracker::WaitAndPublishRecedingHorizon, this);
 
-	//while((lqr_it + LQR::time_window) - reference_path.poses.begin() <= reference_path.poses.size())
-	//{
-		CmdVel cmd_ = LQR::LQRControl(lqr_it, GetCurrentPose(),closest_it-reference_path.poses.begin());//for one time horizon
-		PathTrackerROS::PublishControlCmd(cmd_);
-		//PathTrackerROS::PublishCurrentPose();
-		PathTrackerROS::PublishTrackedPath();
-		PathTrackerROS::PublishRecedingHorizon(LQR::receding_horiz_path);
-		//++lqr_it;
-	//}	 
-	//std::cout<<"Done tracking \n";
-	//Publish current velocity command
-	//publish receding horizon path 
+	//start a waiting thread 
+	//optimizes over one time horizon.
+	//starts a thread that uses the computed commands in the horizon to predict the path in the current horizon. 
+	CmdVel cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(),closest_it-reference_path.poses.begin());
+	
+	PathTrackerROS::PublishControlCmd(cmd_);
+	//PathTrackerROS::PublishCurrentPose();
+	PathTrackerROS::PublishTrackedPath();
+	t1.join();
+	
 }
 
 
@@ -85,7 +83,7 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 	for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = reference_path.poses.begin(); iter != reference_path.poses.end(); ++iter)
 	{
 
-		
+		std::cout<<"positions"<<iter->pose.position.x<<","<<iter->pose.position.y<<","<<current_pose.pose.position.x<<", "<<current_pose.pose.position.y<<"\n";
 		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + 
 					pow(iter->pose.position.y - current_pose.pose.position.y, 2) + 
 					abs(GetYawFromQuart(*iter) - GetYawFromQuart(current_pose) );
@@ -96,7 +94,8 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 			min_it = iter; 
 		}
 	}
-	std::cout<<"Min dist "<<min_dist<<"\n";
+	//std::cout<<"Min dist "<<min_dist<<" asfasf "<<reference_path.poses.size()<<"\n";
+	
 	std::cout<<"Closest  "<<int(min_it - reference_path.poses.begin())<<"\n";
 	return min_it;
 }
@@ -161,6 +160,7 @@ geometry_msgs::PoseStamped PathTrackerROS::GetCurrentPose()
 {
 	robot_state_client.call(robot_state);
 	geometry_msgs::PoseStamped pose_;
+	std::cout<<"Received::"<<pose_.pose.position.x<<","<<pose_.pose.position.y<<"\n";
 	pose_.pose = robot_state.response.pose;
 	pose_.header.frame_id = "/odom"; 
 	pose_.header.stamp = ros::Time::now();
@@ -196,5 +196,18 @@ void PathTrackerROS::PublishRecedingHorizon(const nav_msgs::Path & receding_hori
 	receding_horiz_pub.publish(receding_horiz_path);
 }
 
+void PathTracker::WaitAndPublishRecedingHorizon()
+{
+	nav_msgs::Path predicted_path;
+	while(true)
+    {
 
+		predicted_path = LQR::message_queue.Receive();
+        if(predicted_path.poses.size())
+            return;
+    }
+
+	PathTrackerROS::PublishRecedingHorizon(predicted_path);
+	//publish the stuff
+}
 

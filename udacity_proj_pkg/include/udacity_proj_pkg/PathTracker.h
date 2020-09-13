@@ -88,5 +88,7 @@ private:
 	*/
 	double GetYawFromQuart(const geometry_msgs::PoseStamped &msg);
 	
+	void WaitAndPublishRecedingHorizon();
+	
 };
 #endif
