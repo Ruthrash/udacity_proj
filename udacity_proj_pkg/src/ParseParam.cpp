@@ -9,6 +9,8 @@ ParseParam::~ParseParam()
 {
 }//
  
+/* @brief Parses string into vector and then to diagonal matrix using it 
+*/
 Eigen::MatrixXd ParseParam::ConvertStringToDiagMatrix( std::string &string_)
 {
     std::vector<std::string> names;
@@ -20,7 +22,7 @@ Eigen::MatrixXd ParseParam::ConvertStringToDiagMatrix( std::string &string_)
         tmp.push_back(stod(names[i]));
 
     }
-    //Eigen::VectorXd dummy(tmp.data());
+    //convert std::vector<double> to Eigen::VectorXd
     Eigen::VectorXd dummy = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(tmp.data(), tmp.size());
     return dummy.asDiagonal();
 }
