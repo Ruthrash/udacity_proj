@@ -57,7 +57,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	Eigen::MatrixXd B;
 	Eigen::MatrixXd K;
 	Eigen::MatrixXd P;
-
+	
 	//if(closest_idx > )
 	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_it + LQR::time_window; 
 	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
@@ -119,7 +119,8 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A_vec.push_back(A); B_vec.push_back(B);
 
 	//start a thread to compute receding_horiz_path and it also sends the receding horizon path to the message queue
-	std::thread t1(&LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec);
+	all_threads.push_back(std::move(std::thread(&LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec))   );
+	std::cout<<"threads"<<all_threads.size()<<"\n";
 	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }
@@ -219,7 +220,7 @@ void LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_, const st
 													const std::vector<Eigen::MatrixXd> &A_vec, const std::vector<Eigen::MatrixXd> &B_vec )
 {
 	std::vector<Eigen::VectorXd> predicted_path_eig;
-	std::cout<<"Sizes!!"<<states_.size()<<","<<cmds.size()<<"\n";
+	//std::cout<<"Sizes!!"<<states_.size()<<","<<cmds.size()<<"\n";
 	for(int i = 0; i < states_.size(); ++i)
 	{
 		Eigen::VectorXd predicted_pose_vec(state_dimension_length), current_cmd_vec(input_dimension_length);
@@ -230,7 +231,6 @@ void LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_, const st
 	predicted_path_eig.push_back(*(states_.end()-1));
 
 	nav_msgs::Path receding_horiz_path = GetRecedingHorizon(predicted_path_eig);
-	std::cout<<"Sending!!\n";
 	message_queue.Send(std::move (receding_horiz_path));
 	
 }
