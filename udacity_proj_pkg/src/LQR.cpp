@@ -52,11 +52,13 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 {
 	//std::vector<Eigen::VectorXd> predicted_path; 
 	Eigen::MatrixXd prev_P;//closed loop cost function's weight matrix 
-	//Eigen::MatrixXd K;//state feedback gain matrix
 	Eigen::MatrixXd A;
 	Eigen::MatrixXd B;
-	Eigen::MatrixXd K;
+	Eigen::MatrixXd K;//state feedback gain matrix
 	Eigen::MatrixXd P;
+	std::cout<<"closest pose="<<(current_it)->pose.position.x<<", "<<(current_it)->pose.position.y<<", "<<GetYaw(current_it)<<"\n";
+	std::cout<<"current pose="<<(current_pose).pose.position.x<<", "<<(current_pose).pose.position.y<<", "<<GetYaw(current_pose)<<"\n";
+	std::cout<<"";
 	
 	//if(closest_idx > )
 	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_it + LQR::time_window; 
@@ -99,7 +101,9 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
 	K = GetKMatrix(A , B , prev_P);
-	P = GetPMatrix(A , B , K , prev_P); 
+	K = 10*K; 
+	P = GetPMatrix(A , B , K , prev_P);
+	P = 10*P; 
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 
 	reference_state_vec <<(end_of_horizon_it - LQR::time_window )->pose.position.x , (end_of_horizon_it -  LQR::time_window )->pose.position.y , GetYaw(end_of_horizon_it -  LQR::time_window );
@@ -119,8 +123,10 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A_vec.push_back(A); B_vec.push_back(B);
 
 	//start a thread to compute receding_horiz_path and it also sends the receding horizon path to the message queue
-	all_threads.push_back(std::move(std::thread(&LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec))   );
-	std::cout<<"threads"<<all_threads.size()<<"\n";
+	auto computation_thread = std::async ( std::launch::async, &LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec);
+	
+	//computation_thread = t;
+	//std::cout<<"threads"<<all_threads.size()<<"\n";
 	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }

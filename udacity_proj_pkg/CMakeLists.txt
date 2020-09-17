@@ -139,6 +139,7 @@ add_library(${PROJECT_NAME}
   "src/PathTracker.cpp"
   "src/LQR.cpp"
   "src/ParseParam.cpp"
+  #"src/RecordPathMain.cpp"
 )
 
 add_dependencies(${PROJECT_NAME}
@@ -192,6 +193,17 @@ target_link_libraries(parseparam
   ${EXTERNAL_LIBS}
   ${catkin_LIBRARIES}
 )
+
+#Build Main for recording path 
+#add_executable(record_path_main
+#  "src/RecordPathMain.cpp"
+#)
+
+#target_link_libraries(record_path_main
+#  ${PROJECT_NAME}
+#  ${EXTERNAL_LIBS}
+#  ${catkin_LIBRARIES}
+#)
 
 ## Build main()
 add_executable(main

@@ -3,7 +3,7 @@
 GazeboROS::GazeboROS(ros::NodeHandle &node)
 {
 	robot_state_client = node.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
-	robot_state.request.model_name = "/";//_node.param<std::string>("robot_model_name", "");;
+	robot_state.request.model_name = "jackal";//_node.param<std::string>("robot_model_name", "");;
 	robot_state.request.relative_entity_name = "";
 	robot_path_pub = node.advertise<nav_msgs::Path>("/robot_reference_path",1,true);
 }

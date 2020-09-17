@@ -59,14 +59,13 @@ void PathTracker::TrackerInit()
 
 void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const_iterator &closest_it)
 {
-
-	
-	// start a receding horiz publish thread that waits for receding_horiz_path to be ready and publishes it
-	all_threads.push_back(std::move( std::thread(&PathTracker::WaitAndPublishRecedingHorizon, this)));
-
-	//start a waiting thread 
-	//optimizes over one time horizon.
 	//starts a thread that uses the computed commands in the horizon to predict the path in the current horizon. 
+	auto waiting_thread = std::async(std::launch::async,&PathTracker::WaitAndPublishRecedingHorizon, this);
+	
+	 //computation_thread = t;
+
+
+	//optimizes over one time horizon.
 	CmdVel cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(),closest_it-reference_path.poses.begin());
 	PathTrackerROS::PublishControlCmd(cmd_);
 	//PathTrackerROS::PublishCurrentPose();
@@ -84,6 +83,7 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 	{
 
 		//std::cout<<"positions"<<iter->pose.position.x<<","<<iter->pose.position.y<<","<<current_pose.pose.position.x<<", "<<current_pose.pose.position.y<<"\n";
+		//c
 		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + 
 					pow(iter->pose.position.y - current_pose.pose.position.y, 2) + 
 					abs(GetYawFromQuart(*iter) - GetYawFromQuart(current_pose) );
@@ -102,6 +102,7 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 
 double PathTracker::GetGoalDistance()
 {
+	//calculates  eucl distance not absolute path length  
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
 	double distance = pow(current_pose.pose.position.x - (reference_path.poses.end()-1)->pose.position.x , 2 ) +
 					 pow(current_pose.pose.position.y - (reference_path.poses.end()-1)->pose.position.y , 2 );

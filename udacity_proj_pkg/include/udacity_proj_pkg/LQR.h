@@ -56,8 +56,8 @@ protected:
 	int input_dimension_length; 
 	double GetGoalDistance();
 	nav_msgs::Path receding_horiz_path;
-	std::vector waiting_thread;
-	std::vector computation_thread;  
+	std::thread waiting_thread;
+	std::thread computation_thread;  
 	
 	
 

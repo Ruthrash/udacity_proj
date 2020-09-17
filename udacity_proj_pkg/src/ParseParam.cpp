@@ -20,7 +20,6 @@ Eigen::MatrixXd ParseParam::ConvertStringToDiagMatrix( std::string &string_)
     for(int i =0; i < names.size(); ++i)
     {
         tmp.push_back(stod(names[i]));
-
     }
     //convert std::vector<double> to Eigen::VectorXd
     Eigen::VectorXd dummy = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(tmp.data(), tmp.size());
