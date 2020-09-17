@@ -62,11 +62,16 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	//starts a thread that uses the computed commands in the horizon to predict the path in the current horizon. 
 	auto waiting_thread = std::async(std::launch::async,&PathTracker::WaitAndPublishRecedingHorizon, this);
 	
-	 //computation_thread = t;
-
-
+	CmdVel cmd_;
 	//optimizes over one time horizon.
-	CmdVel cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(),closest_it-reference_path.poses.begin());
+	if(closest_it-reference_path.poses.begin() + LQR::time_window > reference_path.poses.size())
+	{
+		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), LQR::time_window + closest_it-reference_path.poses.begin() - reference_path.poses.size() );
+		std::cout<<"too close\n";
+	}
+	else
+		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
+
 	PathTrackerROS::PublishControlCmd(cmd_);
 	//PathTrackerROS::PublishCurrentPose();
 	PathTrackerROS::PublishTrackedPath();

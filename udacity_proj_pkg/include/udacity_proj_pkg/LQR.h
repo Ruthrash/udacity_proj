@@ -42,7 +42,7 @@ public:
 	~LQR();
 	/**@LQR given the reference to the initial pose of current horizon
 	*/
-	CmdVel LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it,
+	CmdVel LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it,
 					 const geometry_msgs::PoseStamped &current_pose,
 					 const int &closest_idx);
 	MessageQueue<nav_msgs::Path> message_queue;
@@ -77,7 +77,7 @@ private:
 	//get heading angle/yaw from quartenion
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);
 	double GetYaw(const geometry_msgs::PoseStamped& current_pose);
-	nav_msgs::Path GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path);
+	nav_msgs::Path GetRecedingHorizon(const std::vector<Eigen::VectorXd> &predicted_path);	
 	void GetPredictedPath(const std::vector<Eigen::VectorXd> &states_ , const std::vector<CmdVel> cmds,
 													const std::vector<Eigen::MatrixXd> &A_vec, const std::vector<Eigen::MatrixXd> &B_vec );
 };

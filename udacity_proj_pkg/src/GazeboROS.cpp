@@ -29,6 +29,7 @@ GazeboROS::~GazeboROS()
 
 void GazeboROS::GetRobotPath()
 {
+  std::cout<<"getting poses\n";
   robot_state_client.call(robot_state);
   geometry_msgs::PoseStamped pose_;
   pose_.pose = robot_state.response.pose;

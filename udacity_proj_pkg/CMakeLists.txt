@@ -195,15 +195,15 @@ target_link_libraries(parseparam
 )
 
 #Build Main for recording path 
-#add_executable(record_path_main
-#  "src/RecordPathMain.cpp"
-#)
+add_executable(record_path
+  "src/RecordPath.cpp"
+)
 
-#target_link_libraries(record_path_main
-#  ${PROJECT_NAME}
-#  ${EXTERNAL_LIBS}
-#  ${catkin_LIBRARIES}
-#)
+target_link_libraries(record_path
+  ${PROJECT_NAME}
+  ${EXTERNAL_LIBS}
+  ${catkin_LIBRARIES}
+)
 
 ## Build main()
 add_executable(main

@@ -47,28 +47,24 @@ LQR::~LQR()
 
 }
 
-CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_it, const geometry_msgs::PoseStamped &current_pose, 
-										const int &closest_idx)
+CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it, const geometry_msgs::PoseStamped &current_pose, 
+										const int &time_window_offset)
 {
 	//std::vector<Eigen::VectorXd> predicted_path; 
 	Eigen::MatrixXd prev_P;//closed loop cost function's weight matrix 
 	Eigen::MatrixXd A;
 	Eigen::MatrixXd B;
 	Eigen::MatrixXd K;//state feedback gain matrix
-	Eigen::MatrixXd P;
-	std::cout<<"closest pose="<<(current_it)->pose.position.x<<", "<<(current_it)->pose.position.y<<", "<<GetYaw(current_it)<<"\n";
-	std::cout<<"current pose="<<(current_pose).pose.position.x<<", "<<(current_pose).pose.position.y<<", "<<GetYaw(current_pose)<<"\n";
-	std::cout<<"";
-	
+	Eigen::MatrixXd P;	
 	//if(closest_idx > )
-	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_it + LQR::time_window; 
+	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_closest_it + LQR::time_window - time_window_offset; 
 	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
 	cmds_.push_back(end_of_horizon_cmd);
 	std::vector<Eigen::VectorXd> states_;
 	std::vector<Eigen::MatrixXd> A_vec, B_vec; 
 
-	for (int i = 1 ; i <= LQR::time_window; i++ )//i is steps to go in LQR
+	for (int i = 1 ; i <= LQR::time_window - time_window_offset; i++ )//i is steps to go in LQR
 	{
 		//Linearized around the pose to go(n - (i-1))
 		A = GetAMatrix(end_of_horizon_it , i - 1);
@@ -77,19 +73,18 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		P = GetPMatrix(A , B , K , prev_P); 
 		prev_P = P;
 
-		Eigen::VectorXd reference_state_vec(state_dimension_length); 
+		Eigen::VectorXd reference_state_vec(state_dimension_length);  Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 		reference_state_vec <<  (end_of_horizon_it - (i -1) )->pose.position.x,
 								(end_of_horizon_it - (i -1) )->pose.position.y,
 		  						GetYaw(end_of_horizon_it - (i -1) );
-		Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 		reference_cmd_vec <<cmds_[i-1].v,
 							cmds_[i-1].omega;
 									
-		Eigen::VectorXd current_state_vec(state_dimension_length);
+		Eigen::VectorXd current_state_vec(state_dimension_length); Eigen::VectorXd current_cmd_vec(input_dimension_length);
 		current_state_vec <<(end_of_horizon_it - i)->pose.position.x, 
 							(end_of_horizon_it - i)->pose.position.y, 
 							GetYaw(end_of_horizon_it - i);
-		Eigen::VectorXd current_cmd_vec(input_dimension_length);
+
 		current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
 
 		CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
@@ -97,36 +92,35 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		cmds_.push_back(current_cmd); 
 		A_vec.push_back(A); B_vec.push_back(B);
 	}
+	//calculate control command to reach from current pose to the closest pose in the reference path
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
-	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
-	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
+	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
+	B = GetBMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
 	K = GetKMatrix(A , B , prev_P);
 	K = 10*K; 
 	P = GetPMatrix(A , B , K , prev_P);
 	P = 10*P; 
 
-	Eigen::VectorXd reference_state_vec(state_dimension_length); 
-	reference_state_vec <<(end_of_horizon_it - LQR::time_window )->pose.position.x , (end_of_horizon_it -  LQR::time_window )->pose.position.y , GetYaw(end_of_horizon_it -  LQR::time_window );
-	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
-	reference_cmd_vec << cmds_[time_window].v , cmds_[time_window].omega;
+	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
+	reference_state_vec <<(end_of_horizon_it - LQR::time_window - time_window_offset )->pose.position.x,
+						 (end_of_horizon_it -  LQR::time_window -time_window_offset  )->pose.position.y, 
+						 GetYaw(end_of_horizon_it -  LQR::time_window - time_window_offset );
+	reference_cmd_vec << cmds_[time_window - time_window_offset].v,
+						 cmds_[time_window - time_window_offset].omega;
 
-	Eigen::VectorXd current_state_vec(state_dimension_length);
-
-	current_state_vec << current_pose.pose.position.x , current_pose.pose.position.y , GetYaw(current_pose);
-	Eigen::VectorXd current_cmd_vec(input_dimension_length);
-
+	Eigen::VectorXd current_state_vec(state_dimension_length); Eigen::VectorXd current_cmd_vec(input_dimension_length);
+	current_state_vec <<current_pose.pose.position.x, 
+						current_pose.pose.position.y, 
+						GetYaw(current_pose);
 	current_cmd_vec = reference_cmd_vec + K * (current_state_vec - reference_state_vec);
+	
 	CmdVel current_cmd; current_cmd.v = current_cmd_vec[0]; current_cmd.omega = current_cmd_vec[1];
-
 	states_.push_back(current_state_vec);
 	cmds_.push_back(current_cmd);
 	A_vec.push_back(A); B_vec.push_back(B);
 
-	//start a thread to compute receding_horiz_path and it also sends the receding horizon path to the message queue
+	//start a thread to compute the predicted path in current time horizono and send it to the message queue
 	auto computation_thread = std::async ( std::launch::async, &LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec);
-	
-	//computation_thread = t;
-	//std::cout<<"threads"<<all_threads.size()<<"\n";
 	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }
@@ -134,9 +128,12 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 Eigen::MatrixXd LQR::GetAMatrix(const std::vector<geometry_msgs::PoseStamped>::const_iterator &end_of_horizon , int steps_to_go)
 {
 	Eigen::MatrixXd A = Eigen::MatrixXd::Identity(state_dimension_length,state_dimension_length);
+	
+	/* place holder for trajectory tracking, ignore.
 	//double yaw = GetYaw(end_of_horizon - steps_to_go);
 	//A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
 	//A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
+	*/
 	return A; 
 }
 
@@ -249,10 +246,7 @@ void LQR::GetPredictedPath(const std::vector<Eigen::VectorXd> &states_, const st
 template <typename T>
 T MessageQueue<T>::Receive()
 {
-    // FP.5a : The method receive should use std::unique_lock<std::mutex> and _condition.wait() 
-    // to wait for and receive new messages and pull them from the queue using move semantics. 
-    // The received object should then be returned by the receive function. 
-    // perform queue modification under the lock
+
     std::unique_lock<std::mutex> uLock(_mtx);
     _cond.wait(uLock, [this] { return !_queue.empty(); }); // pass unique lock to condition variable
 
@@ -266,17 +260,12 @@ T MessageQueue<T>::Receive()
 template <typename T>
 void MessageQueue<T>::Send(T &&msg)
 {
-    // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
-    // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
-    // perform vector modification under the lock
-    std::lock_guard<std::mutex> uLock(_mtx);
 
-    // add vector to queue
-    //std::cout << "   Message " << msg << " has been sent to the queue" << std::endl;
-    //_queue.push_back(std::move(msg));
+    std::lock_guard<std::mutex> uLock(_mtx);
     _queue.push_back(msg);
     _cond.notify_one(); // notify client after pushing new Vehicle into vector
 }
+
 
 
 
