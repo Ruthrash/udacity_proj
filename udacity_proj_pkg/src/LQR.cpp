@@ -32,8 +32,6 @@ LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} ,
 	node_.getParam("input_dimension_length", dummy);
 	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
 
-	discount_rate = 0.1;
-
 	std::cout<<"!!!PARAMSS!!!\n"<<input_dimension_length<<",\n"
 							  <<state_dimension_length<<",\n"
 							  <<sampling_period<<",\n"
@@ -71,12 +69,8 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 		//Linearized around the pose to go(n - (i-1))
 		A = GetAMatrix(end_of_horizon_it , i - 1);
 		B = GetBMatrix(end_of_horizon_it , i - 1);
-		std::cout<<"asdf"<<LQR::time_window - time_window_offset - i<<"\n";
-		std::cout<<"qwer"<<pow(discount_rate,LQR::time_window - time_window_offset - i)<<"\n" ;
-		//K = GetKMatrix(A , B , prev_P, pow(discount_rate,LQR::time_window - time_window_offset - i));
-		//P = GetPMatrix(A , B , K , prev_P, pow(discount_rate,LQR::time_window - time_window_offset- i)); 
-		K = GetKMatrix(A , B , prev_P, 1.0);
-		P = GetPMatrix(A , B , K , prev_P, 1.0); 
+		K = GetKMatrix(A , B , prev_P);
+		P = GetPMatrix(A , B , K , prev_P); 
 		prev_P = P;
 
 		Eigen::VectorXd reference_state_vec(state_dimension_length);  Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
@@ -102,9 +96,10 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset );
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
-	K = GetKMatrix(A , B , prev_P,1.0);
-	P = GetPMatrix(A , B , K , prev_P,1.0);
-
+	K = GetKMatrix(A , B , prev_P);
+	K = 10*K;
+	P = GetPMatrix(A , B , K , prev_P);
+	//P = P;
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 	reference_state_vec <<(end_of_horizon_it - LQR::time_window - time_window_offset )->pose.position.x,
@@ -152,18 +147,18 @@ Eigen::MatrixXd LQR::GetBMatrix(const std::vector<geometry_msgs::PoseStamped>::c
 	return B; 
 }
 
-Eigen::MatrixXd LQR::GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P,const  double &discount_rate_)
+Eigen::MatrixXd LQR::GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P)
 {	
-	Eigen::MatrixXd K = discount_rate_*LQR::R + B.transpose() * prev_P * B ; 
+	Eigen::MatrixXd K = LQR::R + B.transpose() * prev_P * B ; 
 	K = - K.inverse(); 
 	K = K * B.transpose() * prev_P * A; 
 	return K ; 
 }
 
-Eigen::MatrixXd LQR::GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P, const double &discount_rate_)
+Eigen::MatrixXd LQR::GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P)
 {
 	Eigen::MatrixXd temp = A + B * K;
-	Eigen::MatrixXd	P = discount_rate_*LQR::Q + K.transpose() *discount_rate_*LQR::R * K + temp.transpose() * prev_P * temp;
+	Eigen::MatrixXd	P = LQR::Q + K.transpose() *LQR::R * K + temp.transpose() * prev_P * temp;
 	return P; 
 }
 

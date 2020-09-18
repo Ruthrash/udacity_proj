@@ -59,7 +59,7 @@ protected:
 	nav_msgs::Path receding_horiz_path;
 	std::thread waiting_thread;
 	std::thread computation_thread;  
-	double discount_rate; 
+
 	
 	
 
@@ -73,8 +73,8 @@ private:
 	Eigen::MatrixXd GetBMatrix(const std::vector<geometry_msgs::PoseStamped>::const_iterator &end_of_horizon , int steps_to_go);
 
 	//used for path tracking cost function 
-	Eigen::MatrixXd GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P, const double &discount_rate_); 
-	Eigen::MatrixXd GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P, const double &discount_rate_);
+	Eigen::MatrixXd GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P); 
+	Eigen::MatrixXd GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P);
 
 	//get heading angle/yaw from quartenion
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);

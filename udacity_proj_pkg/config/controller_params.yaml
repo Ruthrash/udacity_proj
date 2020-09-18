@@ -1,7 +1,7 @@
 recorded_path_file : "/home/ruthz/Desktop/path.txt"
-Q_matrix_diag : "1600.0, 1600.0 ,1500.0"
-R_matrix_diag : "3900.0, 3000.0"
-discount_rate : 
+Q_matrix_diag : "160.0, 160.0 ,200.0"
+R_matrix_diag : "3000.0, 3000.0"
+discount_rate : "0.9"
 state_dimension_length : "3"
 input_dimension_length : "2"
 sampling_period : "3"
