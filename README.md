@@ -52,25 +52,73 @@ end func
 - C++11 STL
 - Eigen
 - Jackal Simulation
+- turtlebot_teleop(Optional, teleoperation to record reference path)
 - ROS rqt_multiplot(Optional, for visualization)
 
 ## Installation
-
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+Install dependancies 
+##### Eigen
 
 ```bash
-pip install foobar
+cd 
+git clone https://gitlab.com/libeigen/eigen.git
+cd eigen 
+mkdir build 
+cd build 
+cmake ../
+sudo make install
 ```
 
+##### Clearpath Jackal Simulation
+```bash
+sudo apt-get install ros-kinetic-jackal-simulator
+```
+
+##### turtlebot_teleop
+```bash
+sudo apt-get install ros-kinetic-turtlebot-teleop
+```
+
+catkin_make is used to build the package. We therefore have to follow ROS workspace structure of directory
+##### Create a ROS workspace, pull and build the code
+```bash
+mkdir -p ~/catkin_ws/src 
+cd ~/catkin_ws/src
+catkin_init_workspace 
+git clone https://github.com/Ruthrash/udacity_proj
+catkin_make_isolated
+```
 ## Usage
 
-```python
-import foobar
 
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+##### source current workspace
+```bash
+cd catkin_ws 
+source devel/setup.bash
 ```
+
+Record Path
+##### configure parameters in config/record_path_params.yaml and run 
+```bash
+roslaunch udacity_proj_pkg 
+```
+##### open a new terminal for teleoperation 
+```bash
+rosrun turtlebot_teleop turtlebot_teleop_key turtlebot_teleop/cmd_vel:=cmd_vel
+```
+##### use the keys shown in this terminal to control the simulated jackal robot
+Track Path
+##### configure parameters in config/controller_params.yaml and run
+```bash
+roslaunch udacity_proj_pkg udacity_project.launch
+```
+
+##### This command should open an Rviz GUI window showing the greeen path as the reference path, blue as the true tracked path and red is the predicted path in the current look ahead time horizon
+
+
+## CodeBase
+
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
