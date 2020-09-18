@@ -46,7 +46,7 @@ void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
-	while(GetGoalDistance() >  0.05 )
+	while(GetGoalDistance() >  0.09)
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
 		TrackPath(closest_it);
@@ -54,7 +54,7 @@ void PathTracker::TrackerInit()
 		if(PathTracker::end_flag)
 			break;
 	}
-	std::cout<<"done tracking\n";
+	ROS_INFO("!!!!!!!Done Tracking!!!!!!!");
 
 	
 }

@@ -13,7 +13,8 @@ int main(int argc, char **argv)
 	ros::service::waitForService("/jackal_velocity_controller/set_parameters");
 	//ros::service::waitForService("/gazebo/get_model_state");
 	bool start_flag = false;
-	std::cout<<"going to track\n";
+	ROS_INFO("!!!!!!!Initialized tracker!!!!!!!");
+	//std::cout<<"going to track\n";
 	while (ros::ok())
 	{
 		ros::spinOnce();
