@@ -174,5 +174,5 @@ Few of the rubrics addressed are,
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
+## References
+- [CSC 2621H 2019 course notes, Florian Shkurti ](http://www.cs.toronto.edu/~florian/courses/imitation_learning/lectures/Lecture2.pdf)
