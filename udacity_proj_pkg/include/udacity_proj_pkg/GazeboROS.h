@@ -13,7 +13,7 @@ class GazeboROS{
 
 public:
 	GazeboROS();
-	GazeboROS(ros::NodeHandle &node, const std::string &file_name_);
+	GazeboROS(ros::NodeHandle &node);
 	~GazeboROS();
 	void GetRobotPath();
 	void PublishRobotPath();
