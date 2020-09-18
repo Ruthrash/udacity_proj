@@ -15,6 +15,7 @@ int main(int argc, char **argv)
 		ros::spinOnce();
 		_gazebo_ros.GetRobotPath();
 	    _gazebo_ros.PublishRobotPath();
+		_gazebo_ros.PublishRobotPose();
 		loop_rate.sleep();
 	}
     return 0; 

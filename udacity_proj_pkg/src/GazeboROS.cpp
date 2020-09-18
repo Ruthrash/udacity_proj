@@ -5,7 +5,8 @@ GazeboROS::GazeboROS(ros::NodeHandle &node)
 	robot_state_client = node.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 	robot_state.request.model_name = "jackal";//_node.param<std::string>("robot_model_name", "");;
 	robot_state.request.relative_entity_name = "";
-	robot_path_pub = node.advertise<nav_msgs::Path>("/robot_reference_path",1,true);
+	robot_path_pub = node.advertise<nav_msgs::Path>("/robot_recorded_path",1,true);
+	robot_pose_pub = node.advertise<geometry_msgs::PoseStamped>("/robot_pose",1,true);
 	node.getParam("file_name", file_name);
 	std::cout<<"Storing poses in "<<file_name<<"\n";
 }
@@ -31,17 +32,17 @@ GazeboROS::~GazeboROS()
 
 void GazeboROS::GetRobotPath()
 {
-  std::cout<<"getting poses\n";
+  
   robot_state_client.call(robot_state);
   geometry_msgs::PoseStamped pose_;
   pose_.pose = robot_state.response.pose;
-
   if(GazeboROS::Distance(pose_ , prev_pose) > 0.001)
   {
 	pose_.header.frame_id = "/odom"; 
 	pose_.header.stamp = ros::Time::now();
 	robot_path.header = pose_.header;
 	robot_path.poses.push_back(pose_);
+	prev_pose = pose_;
   }
  
 }
@@ -49,6 +50,14 @@ void GazeboROS::GetRobotPath()
 void GazeboROS::PublishRobotPath()
 {
 	robot_path_pub.publish(robot_path);
+}
+void GazeboROS::PublishRobotPose()
+{
+	geometry_msgs::PoseStamped pose_s; 
+	pose_s.header.frame_id = "odom";
+	pose_s.header.stamp = ros::Time::now();
+	pose_s.pose = robot_state.response.pose;
+	robot_pose_pub.publish(pose_s);
 }
 double GazeboROS::Distance(const geometry_msgs::PoseStamped &p1 , const geometry_msgs::PoseStamped &p2 )
 {

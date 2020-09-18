@@ -66,7 +66,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	
 	CmdVel cmd_;
 	//optimizes over one time horizon.
-	if(closest_it-reference_path.poses.begin() + 1.5*LQR::time_window  >= reference_path.poses.size()-1)
+	if(closest_it-reference_path.poses.begin() + LQR::time_window  >= reference_path.poses.size()-1)
 	{
 		LQR::time_window = LQR::time_window/2; //close to the end of the path, reduce time_window
 		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
