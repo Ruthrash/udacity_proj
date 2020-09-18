@@ -2,6 +2,8 @@
 
 A ROS Package for running an MPC Path Tracking controller(LQR in the backend) for a differential-drive robot tested in Gazebo simulation. Capstone project for Udacity C++ Nanodegree. Details on how to use the ROS package is mentioned here. You can also find below a brief description of the LQR controller and some information on how to tune it. This project was built and tested in Ubuntu 16.04 and ROS Kinetic + Gazebo7. 
 
+
+
 ## Path Tracking Control
 Given a reference path, path tracking control is an algorithm to compute input commands for the robot to ensure it traverses the reference path as close as possible. Contrary to trajectory tracking, this algorithm doesn't account for the time it takes to traverse the path and only try to minimize the offset between the reference path and the actual traversed path. 
 
@@ -53,7 +55,6 @@ end func
 - Eigen
 - Jackal Simulation
 - turtlebot_teleop(Optional, teleoperation to record reference path)
-- rqt_multiplot(Optional, for visualization)
 
 ## Installation
 Install dependancies 
@@ -116,6 +117,56 @@ roslaunch udacity_proj_pkg udacity_project.launch
 
 
 ## CodeBase
+
+#### Record path
+- RecordPath.cpp
+    - Main function for recording path mode. Gets the *.txt file's path. Instantiates the ROS node
+
+- GazeoROS.cpp
+    - GazeboROS class 
+        - used for recording a path. Uses gazebo_ros objects to query for robot's current pose and uses that to store the traced path
+
+
+#### Track path
+- main.cpp
+    - Main function for tracking path mode. Instantiates the ROS node and initiates the path tracking algorithm.
+
+- PathTracker.cpp
+    - PathTracker class(public PathTrackerROS, public LQR)
+        - Complete encapsulated Path Tracking object that continuously runs the LQR algorithm for the current time horizon
+        - Inherits LQR, PathTracker members.
+    - PathTrackerROS class
+        - Encapsulates ROS stuff related to path tracking. Publishes control command, current pose, and tracked, reference, and predicted paths. 
+
+- LQR.cpp(public ParseParam)
+    - LQR class 
+        - This class contains the method to get current control command and also runs a thread to compute predicted path based on the computed control commands for the current time horizon.
+        - contains a message queue object used for synchronization.
+        - Inherits from ParseParam
+        - Gets all required parameters for the control algorithm from config/controller_params.yaml file using ParseParam's methods
+    - MessageQueue class
+        - Used to synchronize computation of predicted path and publishing of paths and control command.
+
+- ParseParam.cpp
+    - ParseParam class
+        - Contains methods to convert ros_param strings to double and Eigen matrices as required by LQR
+
+## Expected Behavior and Rubrics
+
+This application has two modes of operation - 1. Recording a path 2. Tracking the path. And instructions on how to run both the modes can be seen in "Usage". 
+
+When recording a path, the location of the *.txt file storing the path is passed as an argument. A teleoperation node is used to control the robot and the path traced while manually teleoperating is stored in the *.txt file. During this operation, one can see the recorded path and current pose of the robot in the Rviz GUI.
+
+When tracking the path, the location of *.txt file containing the recorded path is entererd in the params .yaml file, which also contains the parameters used to tune the algorithm. While tracking, the robot's state is queried from gazebo and therefore we have the complete access to the robot's true state. During this mode, one can see the reference path, tracked path and the predicted path in the current time horizon in Rviz GUI. This mode also leverages concurrency by running a parallel thread to compute the predicted path in the current timehorizon and publishes it. To synchronize this operation, a concurrent message queue is used. 
+
+Few of the rubrics addressed are, 
+| Rubric Addressed 	| Location 	|
+|-	|-	|
+| Concurrency:<br>The project uses multithreading. 	| PathTracker.cpp Line 65<br>LQR.cpp Line 122 	|
+| Concurrency:<br>A condition variable is used in the project. 	| LQR.cpp Line 264, 249<br>Used in a concurrent message queue  	|
+| OOP:<br>Overloaded functions allow the same function to operate on different parameters 	| LQR.cpp Line 164, 178 	|
+| OOP: <br>Classes encapsulate behavior. 	| LQR.h Line 37,<br>PathTracker.h Line 23, 64,<br>ParseParam.h Line 11 , <br>GazeboROS.h Line 12 	|
+| OOP:<br>Classes follow an appropriate inheritance hierarchy. 	| PathTracker.h Line 23, 64<br>LQR.h  Line 37 	|
 
 
 

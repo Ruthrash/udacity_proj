@@ -47,8 +47,7 @@ LQR::~LQR()
 
 }
 
-CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it, const geometry_msgs::PoseStamped &current_pose, 
-										const int &time_window_offset)
+CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it, const geometry_msgs::PoseStamped &current_pose)
 {
 	//std::vector<Eigen::VectorXd> predicted_path; 
 	Eigen::MatrixXd prev_P;//closed loop cost function's weight matrix 
@@ -57,14 +56,14 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	Eigen::MatrixXd K;//state feedback gain matrix
 	Eigen::MatrixXd P;	
 	//if(closest_idx > )
-	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_closest_it + LQR::time_window - time_window_offset; 
+	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_closest_it + LQR::time_window; 
 	prev_P = LQR::Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
 	cmds_.push_back(end_of_horizon_cmd);
 	std::vector<Eigen::VectorXd> states_;
 	std::vector<Eigen::MatrixXd> A_vec, B_vec; 
-
-	for (int i = 1 ; i <= LQR::time_window - time_window_offset ; i++ )//i is steps to go in LQR
+	//get control commands for 
+	for (int i = 1 ; i <= LQR::time_window; i++ )//i is steps to go in LQR
 	{
 		//Linearized around the pose to go(n - (i-1))
 		A = GetAMatrix(end_of_horizon_it , i - 1);
@@ -94,18 +93,18 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	}
 	//calculate control command to reach from current pose to the closest pose in the reference path
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
-	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset );
-	B = GetBMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
+	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
+	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
 	K = GetKMatrix(A , B , prev_P);
 	K = K;
 	P = GetPMatrix(A , B , K , prev_P);
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
-	reference_state_vec <<(end_of_horizon_it - LQR::time_window - time_window_offset )->pose.position.x,
-						 (end_of_horizon_it -  LQR::time_window - time_window_offset )->pose.position.y, 
-						 GetYaw(end_of_horizon_it -  LQR::time_window - time_window_offset );
-	reference_cmd_vec << cmds_[LQR::time_window - time_window_offset ].v,
-						 cmds_[LQR::time_window - time_window_offset].omega;
+	reference_state_vec <<(end_of_horizon_it - LQR::time_window )->pose.position.x,
+						 (end_of_horizon_it -  LQR::time_window )->pose.position.y, 
+						 GetYaw(end_of_horizon_it -  LQR::time_window );
+	reference_cmd_vec << cmds_[LQR::time_window ].v,
+						 cmds_[LQR::time_window ].omega;
 
 	Eigen::VectorXd current_state_vec(state_dimension_length); Eigen::VectorXd current_cmd_vec(input_dimension_length);
 	current_state_vec <<current_pose.pose.position.x, 
@@ -127,7 +126,6 @@ Eigen::MatrixXd LQR::GetAMatrix(const std::vector<geometry_msgs::PoseStamped>::c
 {
 	Eigen::MatrixXd A = Eigen::MatrixXd::Identity(state_dimension_length,state_dimension_length);
 	
-	//place holder for trajectory tracking, ignore.
 	double yaw = GetYaw(end_of_horizon - steps_to_go);
 	A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
 	A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;

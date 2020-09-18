@@ -5,7 +5,6 @@
 #include <iostream>
 #include <gazebo_msgs/GetModelState.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Pose.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 
