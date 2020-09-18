@@ -8,7 +8,7 @@ Given a reference path, path tracking control is an algorithm to compute input c
 Given the current state and a "goal" state of the system, Model Predictive Control(MPC) is an control paradigm to compute input commands to drive the system to the goal state as below, 
 
 -  A model of the system is used to numerically solve an open-loop optimization problem at each step of a look-ahead prediction horizon. 
-- Only the first control command computed in the prediction horizon is executed.
+- Even though we have the control commands for all time steps in the current time horizon, only the first control command is executed.
 - During the next time step, current state of the system is measured and the algorithm starts again, running till the system reaches and stays at the "goal" state.  
 
 In this project, the optimization algorithm used in the backend for each time step is a Linear Quadratic Regulator. This project uses a neat closed form solution to this optimization problem(look at References). Although, the differential-drive model(our system) is non-linear, we approximate it as a linear system at each time step when the LQR is run. Pseudocode for the MPC and LQR can be found below. 
