@@ -43,8 +43,7 @@ public:
 	/**@LQR given the reference to the initial pose of current horizon
 	*/
 	CmdVel LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it,
-					 const geometry_msgs::PoseStamped &current_pose,
-					 const int &time_window_offset);
+					 const geometry_msgs::PoseStamped &current_pose);
 	MessageQueue<nav_msgs::Path> message_queue;
 
 	//void Linearize(const geometry_msgs::PoseStamped &pose_, const nav_msgs::Path &reference_path);

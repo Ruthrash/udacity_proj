@@ -69,7 +69,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	if(closest_it-reference_path.poses.begin() + LQR::time_window  >= reference_path.poses.size()-1)
 	{
 		LQR::time_window = LQR::time_window/2; //close to the end of the path, reduce time_window
-		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
+		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose());
 		PathTrackerROS::PublishControlCmd(cmd_);
 		PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
@@ -77,7 +77,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 
 		if(closest_it-reference_path.poses.begin() + LQR::time_window  >= reference_path.poses.size()-1)//during last reduced time window run open loop
 		{
-			cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0);
+			cmd_ = LQR::LQRControl(closest_it, GetCurrentPose());
 			PathTrackerROS::PublishControlCmd(LQR::cmds_, double(time_window/sampling_period));
 			cmds_.clear();
 			PathTracker::end_flag = true;
@@ -85,7 +85,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 		}
 	}
 	else
-		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
+		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose());
 		PathTrackerROS::PublishControlCmd(cmd_);
 		PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
@@ -164,11 +164,11 @@ void PathTrackerROS::PublishReferencePath()
 void PathTrackerROS::PublishTrackedPath()
 {
 	ros::service::waitForService("/jackal_velocity_controller/set_parameters");
+	//geometry_msgs::PoseStamped pose_=  ;
 	tracked_path.poses.push_back(GetCurrentPose());
 	tracked_path.header.stamp = ros::Time::now();
 	tracked_path.header.frame_id = "odom";
 	tracked_path_pub.publish(tracked_path);
-
 }
 
 geometry_msgs::PoseStamped PathTrackerROS::GetCurrentPose()
