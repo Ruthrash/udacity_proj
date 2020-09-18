@@ -46,7 +46,7 @@ void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
-	while(GetGoalDistance() >  0.1 )
+	while(GetGoalDistance() >  0.05 )
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
 		TrackPath(closest_it);
@@ -71,7 +71,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 		LQR::time_window = LQR::time_window/2; //close to the end of the path, reduce time_window
 		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
 		PathTrackerROS::PublishControlCmd(cmd_);
-		//PathTrackerROS::PublishCurrentPose();
+		PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
 		cmds_.clear();
 
@@ -87,7 +87,7 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	else
 		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
 		PathTrackerROS::PublishControlCmd(cmd_);
-		//PathTrackerROS::PublishCurrentPose();
+		PathTrackerROS::PublishCurrentPose();
 		PathTrackerROS::PublishTrackedPath();
 		cmds_.clear();	
 }
@@ -99,9 +99,6 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 	std::vector<geometry_msgs::PoseStamped>::const_iterator min_it = reference_path.poses.begin(); 
 	for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = reference_path.poses.begin(); iter != reference_path.poses.end(); ++iter)
 	{
-
-		//std::cout<<"positions"<<iter->pose.position.x<<","<<iter->pose.position.y<<","<<current_pose.pose.position.x<<", "<<current_pose.pose.position.y<<"\n";
-		//c
 		double dist = pow(iter->pose.position.x - current_pose.pose.position.x, 2) + 
 					pow(iter->pose.position.y - current_pose.pose.position.y, 2) + 
 					abs(GetYawFromQuart(*iter) - GetYawFromQuart(current_pose) );
@@ -112,9 +109,6 @@ std::vector<geometry_msgs::PoseStamped>::const_iterator PathTracker::GetClosestP
 			min_it = iter; 
 		}
 	}
-	//std::cout<<"Min dist "<<min_dist<<" asfasf "<<reference_path.poses.size()<<"\n";
-	
-	//std::cout<<"Closest  "<<int(min_it - reference_path.poses.begin())<<"\n";
 	return min_it;
 }
 
@@ -169,6 +163,7 @@ void PathTrackerROS::PublishReferencePath()
 }
 void PathTrackerROS::PublishTrackedPath()
 {
+	ros::service::waitForService("/jackal_velocity_controller/set_parameters");
 	tracked_path.poses.push_back(GetCurrentPose());
 	tracked_path.header.stamp = ros::Time::now();
 	tracked_path.header.frame_id = "odom";
@@ -218,8 +213,10 @@ void PathTrackerROS::PublishControlCmd(std::vector<CmdVel> cmds_, double rate)
 			cmd.angular.z = 2*cmd.angular.z/abs(cmd.angular.z);
 
 		cmd_vel_pub.publish(cmd); 
-		std::this_thread::sleep_for(std::chrono::milliseconds(int(2*1000.0*rate)));
+		std::this_thread::sleep_for(std::chrono::milliseconds(int(1000.0*rate)));
+		std::cout<<int(1000.0*rate) <<"\n";
 		PathTrackerROS::PublishTrackedPath();
+		PathTrackerROS::PublishCurrentPose();
 	}
 
 }

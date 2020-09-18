@@ -33,13 +33,26 @@ void GazeboROS::GetRobotPath()
   robot_state_client.call(robot_state);
   geometry_msgs::PoseStamped pose_;
   pose_.pose = robot_state.response.pose;
-  pose_.header.frame_id = "/odom"; 
-  pose_.header.stamp = ros::Time::now();
-  robot_path.header = pose_.header;
-  robot_path.poses.push_back(pose_);
+
+  if(GazeboROS::Distance(pose_ , prev_pose) > 0.001)
+  {
+	pose_.header.frame_id = "/odom"; 
+	pose_.header.stamp = ros::Time::now();
+	robot_path.header = pose_.header;
+	robot_path.poses.push_back(pose_);
+  }
+ 
 }
 
 void GazeboROS::PublishRobotPath()
 {
 	robot_path_pub.publish(robot_path);
+}
+double GazeboROS::Distance(const geometry_msgs::PoseStamped &p1 , const geometry_msgs::PoseStamped &p2 )
+{
+	double dist = pow(p1.pose.position.x -  p2.pose.position.x, 2) +
+					pow(p1.pose.position.y -  p2.pose.position.y, 2);
+	dist = sqrt(dist);
+	return dist; 
+
 }

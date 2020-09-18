@@ -22,7 +22,9 @@ private:
 	gazebo_msgs::GetModelState robot_state;
 	ros::ServiceClient robot_state_client;
 	nav_msgs::Path robot_path; 
+	geometry_msgs::PoseStamped prev_pose;
 	ros::Publisher robot_path_pub;
+	double Distance(const geometry_msgs::PoseStamped &p1 , const geometry_msgs::PoseStamped &p2 );
 
 };
 

@@ -97,9 +97,8 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset );
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
 	K = GetKMatrix(A , B , prev_P);
-	K = 10*K;
+	K = K;
 	P = GetPMatrix(A , B , K , prev_P);
-	//P = P;
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 	reference_state_vec <<(end_of_horizon_it - LQR::time_window - time_window_offset )->pose.position.x,
@@ -128,11 +127,11 @@ Eigen::MatrixXd LQR::GetAMatrix(const std::vector<geometry_msgs::PoseStamped>::c
 {
 	Eigen::MatrixXd A = Eigen::MatrixXd::Identity(state_dimension_length,state_dimension_length);
 	
-	/* place holder for trajectory tracking, ignore.
-	//double yaw = GetYaw(end_of_horizon - steps_to_go);
-	//A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
-	//A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
-	*/
+	//place holder for trajectory tracking, ignore.
+	double yaw = GetYaw(end_of_horizon - steps_to_go);
+	A(0,2) = - cmds_[steps_to_go ].v * sin(yaw) * sampling_period;
+	A(1,2) = cmds_[steps_to_go].v * cos(yaw) * sampling_period;
+	
 	return A; 
 }
 
