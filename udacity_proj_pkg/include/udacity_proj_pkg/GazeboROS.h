@@ -17,6 +17,7 @@ public:
 	~GazeboROS();
 	void GetRobotPath();
 	void PublishRobotPath();
+	void PublishRobotPose();
 
 private: 
 	gazebo_msgs::GetModelState robot_state;
@@ -24,6 +25,7 @@ private:
 	nav_msgs::Path robot_path; 
 	geometry_msgs::PoseStamped prev_pose;
 	ros::Publisher robot_path_pub;
+	ros::Publisher robot_pose_pub;
 	double Distance(const geometry_msgs::PoseStamped &p1 , const geometry_msgs::PoseStamped &p2 );
 	std::string file_name;
 
