@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen 3 QUIET)
 if(NOT Eigen_FOUND)
-  include(/home/ruthz/eigen-git-mirror/cmake/FindEigen3.cmake)
+  include(~/eigen-git-mirror/cmake/FindEigen3.cmake)
   set(Eigen_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR})
 endif()
 include_directories(${Eigen_INCLUDE_DIR})
