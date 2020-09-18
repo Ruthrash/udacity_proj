@@ -53,7 +53,7 @@ end func
 - Eigen
 - Jackal Simulation
 - turtlebot_teleop(Optional, teleoperation to record reference path)
-- ROS rqt_multiplot(Optional, for visualization)
+- rqt_multiplot(Optional, for visualization)
 
 ## Installation
 Install dependancies 
@@ -98,9 +98,8 @@ source devel/setup.bash
 ```
 
 Record Path
-##### configure parameters in config/record_path_params.yaml and run 
 ```bash
-roslaunch udacity_proj_pkg 
+roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
 ```
 ##### open a new terminal for teleoperation 
 ```bash
