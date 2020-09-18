@@ -32,6 +32,8 @@ LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} ,
 	node_.getParam("input_dimension_length", dummy);
 	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
 
+	discount_rate = 0.1;
+
 	std::cout<<"!!!PARAMSS!!!\n"<<input_dimension_length<<",\n"
 							  <<state_dimension_length<<",\n"
 							  <<sampling_period<<",\n"
@@ -58,19 +60,23 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	Eigen::MatrixXd P;	
 	//if(closest_idx > )
 	std::vector<geometry_msgs::PoseStamped>::const_iterator end_of_horizon_it = current_closest_it + LQR::time_window - time_window_offset; 
-	prev_P = Q; //std::vector<CmdVel> cmds_ =  zeroes; 
+	prev_P = LQR::Q; //std::vector<CmdVel> cmds_ =  zeroes; 
 	CmdVel end_of_horizon_cmd{0.0,0.0};
 	cmds_.push_back(end_of_horizon_cmd);
 	std::vector<Eigen::VectorXd> states_;
 	std::vector<Eigen::MatrixXd> A_vec, B_vec; 
 
-	for (int i = 1 ; i <= LQR::time_window - time_window_offset; i++ )//i is steps to go in LQR
+	for (int i = 1 ; i <= LQR::time_window - time_window_offset ; i++ )//i is steps to go in LQR
 	{
 		//Linearized around the pose to go(n - (i-1))
 		A = GetAMatrix(end_of_horizon_it , i - 1);
 		B = GetBMatrix(end_of_horizon_it , i - 1);
-		K = GetKMatrix(A , B , prev_P);
-		P = GetPMatrix(A , B , K , prev_P); 
+		std::cout<<"asdf"<<LQR::time_window - time_window_offset - i<<"\n";
+		std::cout<<"qwer"<<pow(discount_rate,LQR::time_window - time_window_offset - i)<<"\n" ;
+		//K = GetKMatrix(A , B , prev_P, pow(discount_rate,LQR::time_window - time_window_offset - i));
+		//P = GetPMatrix(A , B , K , prev_P, pow(discount_rate,LQR::time_window - time_window_offset- i)); 
+		K = GetKMatrix(A , B , prev_P, 1.0);
+		P = GetPMatrix(A , B , K , prev_P, 1.0); 
 		prev_P = P;
 
 		Eigen::VectorXd reference_state_vec(state_dimension_length);  Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
@@ -94,19 +100,18 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	}
 	//calculate control command to reach from current pose to the closest pose in the reference path
 	//Get matrices for linearized model around the pose to go X(n - (i-1))
-	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
+	A = GetAMatrix(end_of_horizon_it , LQR::time_window - time_window_offset );
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window - time_window_offset);
-	K = GetKMatrix(A , B , prev_P);
-	K = 10*K; 
-	P = GetPMatrix(A , B , K , prev_P);
-	P = 10*P; 
+	K = GetKMatrix(A , B , prev_P,1.0);
+	P = GetPMatrix(A , B , K , prev_P,1.0);
+
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 
 	reference_state_vec <<(end_of_horizon_it - LQR::time_window - time_window_offset )->pose.position.x,
-						 (end_of_horizon_it -  LQR::time_window -time_window_offset  )->pose.position.y, 
+						 (end_of_horizon_it -  LQR::time_window - time_window_offset )->pose.position.y, 
 						 GetYaw(end_of_horizon_it -  LQR::time_window - time_window_offset );
-	reference_cmd_vec << cmds_[time_window - time_window_offset].v,
-						 cmds_[time_window - time_window_offset].omega;
+	reference_cmd_vec << cmds_[LQR::time_window - time_window_offset ].v,
+						 cmds_[LQR::time_window - time_window_offset].omega;
 
 	Eigen::VectorXd current_state_vec(state_dimension_length); Eigen::VectorXd current_cmd_vec(input_dimension_length);
 	current_state_vec <<current_pose.pose.position.x, 
@@ -121,7 +126,6 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 
 	//start a thread to compute the predicted path in current time horizono and send it to the message queue
 	auto computation_thread = std::async ( std::launch::async, &LQR::GetPredictedPath,this, states_, cmds_, A_vec , B_vec);
-	cmds_.clear();
 	return current_cmd;//return command for current time step 
 }
 
@@ -148,18 +152,18 @@ Eigen::MatrixXd LQR::GetBMatrix(const std::vector<geometry_msgs::PoseStamped>::c
 	return B; 
 }
 
-Eigen::MatrixXd LQR::GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P)
+Eigen::MatrixXd LQR::GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P,const  double &discount_rate_)
 {	
-	Eigen::MatrixXd K = LQR::R + B.transpose() * prev_P * B ; 
+	Eigen::MatrixXd K = discount_rate_*LQR::R + B.transpose() * prev_P * B ; 
 	K = - K.inverse(); 
 	K = K * B.transpose() * prev_P * A; 
 	return K ; 
 }
 
-Eigen::MatrixXd LQR::GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P)
+Eigen::MatrixXd LQR::GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P, const double &discount_rate_)
 {
 	Eigen::MatrixXd temp = A + B * K;
-	Eigen::MatrixXd	P = LQR::Q + K.transpose() * LQR::R * K + temp.transpose() * prev_P * temp;
+	Eigen::MatrixXd	P = discount_rate_*LQR::Q + K.transpose() *discount_rate_*LQR::R * K + temp.transpose() * prev_P * temp;
 	return P; 
 }
 

@@ -44,7 +44,7 @@ public:
 	*/
 	CmdVel LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iterator &current_closest_it,
 					 const geometry_msgs::PoseStamped &current_pose,
-					 const int &closest_idx);
+					 const int &time_window_offset);
 	MessageQueue<nav_msgs::Path> message_queue;
 
 	//void Linearize(const geometry_msgs::PoseStamped &pose_, const nav_msgs::Path &reference_path);
@@ -54,15 +54,17 @@ protected:
 	int time_window;
 	int state_dimension_length;
 	int input_dimension_length; 
+	double sampling_period;
 	double GetGoalDistance();
 	nav_msgs::Path receding_horiz_path;
 	std::thread waiting_thread;
 	std::thread computation_thread;  
+	double discount_rate; 
 	
 	
 
 private:
-	double sampling_period;
+	
 	Eigen::MatrixXd Q;//weight matrix
 	Eigen::MatrixXd R;//Weight matrix
 	
@@ -71,8 +73,8 @@ private:
 	Eigen::MatrixXd GetBMatrix(const std::vector<geometry_msgs::PoseStamped>::const_iterator &end_of_horizon , int steps_to_go);
 
 	//used for path tracking cost function 
-	Eigen::MatrixXd GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P); 
-	Eigen::MatrixXd GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P);
+	Eigen::MatrixXd GetPMatrix(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B, const Eigen::MatrixXd &K, const Eigen::MatrixXd &prev_P, const double &discount_rate_); 
+	Eigen::MatrixXd GetKMatrix(const Eigen::MatrixXd &A , const Eigen::MatrixXd &B , const Eigen::MatrixXd &prev_P, const double &discount_rate_);
 
 	//get heading angle/yaw from quartenion
 	double GetYaw(const std::vector<geometry_msgs::PoseStamped>::const_iterator &reference_pose);

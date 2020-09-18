@@ -32,6 +32,7 @@ public:
 	void GetPath(std::string poses_file_name);
 	void PublishRecedingHorizon(const nav_msgs::Path &receding_horiz_path);
 	void PublishControlCmd(CmdVel cmd_);
+	void PublishControlCmd(std::vector<CmdVel> cmds_, double rate);
 
 protected:
 	nav_msgs::Path reference_path; 
@@ -89,6 +90,7 @@ private:
 	double GetYawFromQuart(const geometry_msgs::PoseStamped &msg);
 	
 	void WaitAndPublishRecedingHorizon();
+	bool end_flag{false}; 
 	
 };
 #endif

@@ -1,6 +1,8 @@
-Q_matrix_diag : "160.0, 160.0 ,150.0"
-R_matrix_diag : "90.0, 90.0"
+recorded_path_file : "/home/ruthz/Desktop/path.txt"
+Q_matrix_diag : "1600.0, 1600.0 ,1500.0"
+R_matrix_diag : "3900.0, 3000.0"
+discount_rate : 
 state_dimension_length : "3"
 input_dimension_length : "2"
 sampling_period : "3"
-time_window : "30"
+time_window : "22"

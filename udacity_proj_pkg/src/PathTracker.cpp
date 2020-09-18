@@ -26,7 +26,6 @@ void PathTrackerROS::GetPath(std::string poses_file_name)
 		{
 			geometry_msgs::PoseStamped pose_;
 			std::istringstream ss(line);
-			//std::cout<<line<<"\n";		
 			ss >> word; pose_.pose.position.x = stod(word);
 			ss >> word; pose_.pose.position.y = stod(word);
 			ss >> word; pose_.pose.position.z = stod(word);
@@ -47,13 +46,16 @@ void PathTracker::TrackerInit()
 {
 	//find closest point in the reference path to current pose and call TrackPath
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
-	while(GetGoalDistance() >  0.5 )
+	while(GetGoalDistance() >  0.1 )
 	{
 		std::vector<geometry_msgs::PoseStamped>::const_iterator closest_it = GetClosestPose(current_pose);
-	
 		TrackPath(closest_it);
 		current_pose = GetCurrentPose();
+		if(PathTracker::end_flag)
+			break;
 	}
+	std::cout<<"done tracking\n";
+
 	
 }
 
@@ -64,19 +66,30 @@ void PathTracker::TrackPath(const std::vector<geometry_msgs::PoseStamped>::const
 	
 	CmdVel cmd_;
 	//optimizes over one time horizon.
-	if(closest_it-reference_path.poses.begin() + LQR::time_window > reference_path.poses.size())
+	if(closest_it-reference_path.poses.begin() + 1.5*LQR::time_window  >= reference_path.poses.size()-1)
 	{
-		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), LQR::time_window + closest_it-reference_path.poses.begin() - reference_path.poses.size() );
-		std::cout<<"too close\n";
+		LQR::time_window = LQR::time_window/2; //close to the end of the path, reduce time_window
+		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
+		PathTrackerROS::PublishControlCmd(cmd_);
+		//PathTrackerROS::PublishCurrentPose();
+		PathTrackerROS::PublishTrackedPath();
+		cmds_.clear();
+
+		if(closest_it-reference_path.poses.begin() + LQR::time_window  >= reference_path.poses.size()-1)//during last reduced time window run open loop
+		{
+			cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0);
+			PathTrackerROS::PublishControlCmd(LQR::cmds_, double(time_window/sampling_period));
+			cmds_.clear();
+			PathTracker::end_flag = true;
+			return;
+		}
 	}
 	else
 		cmd_ = LQR::LQRControl(closest_it, GetCurrentPose(), 0 );
-
-	PathTrackerROS::PublishControlCmd(cmd_);
-	//PathTrackerROS::PublishCurrentPose();
-	PathTrackerROS::PublishTrackedPath();
-	//t1.join();
-	
+		PathTrackerROS::PublishControlCmd(cmd_);
+		//PathTrackerROS::PublishCurrentPose();
+		PathTrackerROS::PublishTrackedPath();
+		cmds_.clear();	
 }
 
 
@@ -110,7 +123,8 @@ double PathTracker::GetGoalDistance()
 	//calculates  eucl distance not absolute path length  
 	geometry_msgs::PoseStamped current_pose = GetCurrentPose();
 	double distance = pow(current_pose.pose.position.x - (reference_path.poses.end()-1)->pose.position.x , 2 ) +
-					 pow(current_pose.pose.position.y - (reference_path.poses.end()-1)->pose.position.y , 2 );
+					 pow(current_pose.pose.position.y - (reference_path.poses.end()-1)->pose.position.y , 2 ) ;
+					  //abs(GetYawFromQuart(current_pose) - GetYawFromQuart(*(reference_path.poses.end()-1)) );
 	distance = sqrt(distance);
 	return distance; 
 }
@@ -189,6 +203,27 @@ void PathTrackerROS::PublishControlCmd(CmdVel cmd_)
 	//std::cout<<"Publishing (v,omeag) "<< cmd_.v <<", "<<cmd_.omega<<"\n";
 
 }
+
+
+void PathTrackerROS::PublishControlCmd(std::vector<CmdVel> cmds_, double rate)
+{
+	for(int i = cmds_.size() - 1; i >=0 ;--i )
+	{
+		geometry_msgs::Twist cmd; 
+		cmd.linear.x = cmds_[i].v ; 
+		cmd.angular.z = cmds_[i].omega; 
+		if(abs(cmd.linear.x >= 2))
+			cmd.linear.x = 2*cmd.linear.x/abs(cmd.linear.x);
+		if(abs(cmd.angular.z >= 2))
+			cmd.angular.z = 2*cmd.angular.z/abs(cmd.angular.z);
+
+		cmd_vel_pub.publish(cmd); 
+		std::this_thread::sleep_for(std::chrono::milliseconds(int(2*1000.0*rate)));
+		PathTrackerROS::PublishTrackedPath();
+	}
+
+}
+
 
 void PathTrackerROS::PublishCurrentPose()
 {
