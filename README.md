@@ -32,7 +32,7 @@ commands func OPTIMIZECURRENTHORIZON(current_pose, current_horizon)
     FOR goal_pose in (END(current_horizon), START(current_horizon))
         PUSHBACK(commands, LQR(prev_pose, goal_pose, reference_input))
     end FOR
-        PUSHBACK(commands, LQR(current_pose, START(current_horizon), reference_input))
+    PUSHBACK(commands, LQR(current_pose, START(current_horizon), reference_input))
     return commands
 end func    
 ```

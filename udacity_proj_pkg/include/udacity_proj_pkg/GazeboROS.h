@@ -13,7 +13,7 @@ class GazeboROS{
 
 public:
 	GazeboROS();
-	GazeboROS(ros::NodeHandle &node);
+	GazeboROS(ros::NodeHandle &node, const std::string &file_name_);
 	~GazeboROS();
 	void GetRobotPath();
 	void PublishRobotPath();
@@ -25,6 +25,7 @@ private:
 	geometry_msgs::PoseStamped prev_pose;
 	ros::Publisher robot_path_pub;
 	double Distance(const geometry_msgs::PoseStamped &p1 , const geometry_msgs::PoseStamped &p2 );
+	std::string file_name;
 
 };
 

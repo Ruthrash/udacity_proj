@@ -6,6 +6,8 @@ GazeboROS::GazeboROS(ros::NodeHandle &node)
 	robot_state.request.model_name = "jackal";//_node.param<std::string>("robot_model_name", "");;
 	robot_state.request.relative_entity_name = "";
 	robot_path_pub = node.advertise<nav_msgs::Path>("/robot_reference_path",1,true);
+	node.getParam("file_name", file_name);
+	std::cout<<"Storing poses in "<<file_name<<"\n";
 }
 
 /*
@@ -13,7 +15,7 @@ GazeboROS::GazeboROS(ros::NodeHandle &node)
 **/
 GazeboROS::~GazeboROS()
 {	
-	std::ofstream poses_file("/home/ruthz/Desktop/path.txt");
+	std::ofstream poses_file(file_name);
 	if(poses_file.is_open() && robot_path.poses.size()!=0)
 	{
 		std::cout<<"Storing recorded path with "<< robot_path.poses.size() <<" poses\n";
