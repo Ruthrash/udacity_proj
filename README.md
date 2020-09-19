@@ -1,6 +1,6 @@
 ## Description
 
-A ROS Package for running an Model Predictive Controller(LQR in the backend) for Path Tracking by a ground mobile robot tested in Gazebo simulation. This is done as my Capstone project for Udacity C++ Nanodegree. Details on how to use the ROS package is mentioned here. You can also find below a brief description of the MPC LQR controller. This project was built and tested in Ubuntu 16.04 and ROS Kinetic + Gazebo7. 
+A ROS Package for running an MPC Path Tracking controller(LQR in the backend) for a differential-drive robot tested in Gazebo simulation. Capstone project for Udacity C++ Nanodegree. Details on how to use the ROS package is mentioned here. You can also find below a brief description of the LQR controller and some information on how to tune it. This project was built and tested in Ubuntu 16.04 and ROS Kinetic + Gazebo7. 
 
 
 
@@ -46,9 +46,7 @@ control_command func LQR(current_pose, goal_pose, reference_input)
     return control_command
 end func
 ```
-### Tuning the MPC 
-
-Please look at config/controller_params.yaml. It contains the parameters to tune the algorithm namely the weight matrices, sampling period, lenth of time window and gain compensation. In the version submitted here, it is tuned and tested to run in the Udacity VM. 
+### Notes on tuning the MPC 
 
 ## Dependancies
 - ROS Kinetic Kame 
@@ -57,13 +55,13 @@ Please look at config/controller_params.yaml. It contains the parameters to tune
 - Eigen
 - Jackal Simulation
 - turtlebot_teleop(Optional, teleoperation to record reference path)
-- rospkg (required when run in Udacity student workspace)
 
 ## Installation
 Install dependancies 
 ##### Eigen
+
 ```bash
-cd /home/workspace
+cd 
 git clone https://gitlab.com/libeigen/eigen.git
 cd eigen 
 mkdir build 
@@ -77,10 +75,6 @@ sudo make install
 sudo apt-get install ros-kinetic-jackal-simulator
 ```
 
-##### rospkg
-```bash
-pip install rospkg
-```
 ##### turtlebot_teleop
 ```bash
 sudo apt-get install ros-kinetic-turtlebot-teleop
@@ -108,25 +102,25 @@ Record Path
 ```bash
 roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
 
-eaxmple: 
-roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
+example: 
+roslaunch udacity_proj_pkg record_path.launch file_name:="/home/workspace/catkin_ws/udacity_proj/udacity_proj_pkg/path/recorded_path.txt" 
 ```
 ##### open a new terminal for teleoperation 
 ```bash
 rosrun turtlebot_teleop turtlebot_teleop_key turtlebot_teleop/cmd_vel:=cmd_vel
 ```
 ##### use the keys shown in this terminal to control the simulated jackal robot
-Track a Recorded Path
-##### configure parameters in ```config/controller_params.yaml``` and run
+Track Path
+##### configure parameters in config/controller_params.yaml and run
 ```bash
 roslaunch udacity_proj_pkg udacity_project.launch
 ```
 
-##### This command should open an Rviz GUI window showing the green path as the reference path, red as the true tracked path and blue is the predicted path in the current look ahead time horizon
+##### This command should open an Rviz GUI window showing the greeen path as the reference path, blue as the true tracked path and red is the predicted path in the current look ahead time horizon
 
 Note: If this error pops up: 
 
-``` 
+```
 ModuleNotFoundError: No module named 'rospkg'
 ```
 please run 
@@ -156,8 +150,8 @@ pip install rospkg
     - PathTrackerROS class
         - Encapsulates ROS stuff related to path tracking. Publishes control command, current pose, and tracked, reference, and predicted paths. 
 
-- LQR.cpp(public ParseParam)
-    - LQR class 
+- LQR.cpp
+    - LQR class (public ParseParam)
         - This class contains the method to get current control command and also runs a thread to compute predicted path based on the computed control commands for the current time horizon.
         - contains a message queue object used for synchronization.
         - Inherits from ParseParam
@@ -191,5 +185,6 @@ When tracking the path, the location of *.txt file containing the recorded path 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
+## References
+- [CSC2621 2019 course notes, Florian Shkurti ](http://www.cs.toronto.edu/~florian/courses/imitation_learning/lectures/Lecture2.pdf)
+- [Optimal Control for Linear Dynamical Systems and Quadratic Cost, Pieter Abbeel](https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/LQR.pdf)
