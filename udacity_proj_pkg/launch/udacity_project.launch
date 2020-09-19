@@ -32,8 +32,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   <include file="$(find jackal_gazebo)/launch/jackal_world.launch">
     <arg name="world_name" value="$(arg world_name)"/> 
     <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
-    <arg name="headless" value="false"/>
+    <arg name="gui" value="false"/>
+    <arg name="headless" value="true"/>
   </include>
 
  <!-- <include file="$(find jackal_gazebo)/launch/spa.launch">
