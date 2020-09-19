@@ -9,7 +9,7 @@ Given a reference path, path tracking control is an algorithm to compute input c
 
 Given the current state and a "goal" state of the system, Model Predictive Control(MPC) is an control paradigm to compute input commands to drive the system to the goal state as below, 
 
--  A model of the system is used to numerically solve an open-loop optimization problem at each step of a look-ahead prediction horizon. 
+-  A prior model of the system is used to numerically solve an open-loop optimization problem at each step in a look-ahead prediction time horizon. 
 - Even though we have the control commands for all time steps in the current time horizon, only the first control command is executed.
 - During the next time step, current state of the system is measured and the algorithm starts again, running till the system reaches and stays at the "goal" state.  
 
@@ -20,8 +20,8 @@ In this project, the optimization algorithm used in the backend for each time st
 ```
 current_control_command func MPC(current_pose, reference_path)
     WHILE DISTANCE(current_pose, ENDOF(reference_path) < THRESHOLD) DO:
-        commands = OPTIMIZECURRENTHORIZON(current_pose, CURRENTHORIZON(reference_path))   
-        current_pose = GETCURRENTPOSE() 
+        array commands = OPTIMIZECURRENTHORIZON(current_pose, CURRENTHORIZON(reference_path))   
+        var current_pose = GETCURRENTPOSE() 
     end WHILE
     return commands[0]
 end func
@@ -29,9 +29,9 @@ end func
 
 ```
 commands func OPTIMIZECURRENTHORIZON(current_pose, current_horizon)
-    reference_input = {0}
+    var reference_input = {0}
     array commands
-    FOR goal_pose in (END(current_horizon), START(current_horizon))
+    FOR goal_pose in arr(END(current_horizon), START(current_horizon))
         PUSHBACK(commands, LQR(prev_pose, goal_pose, reference_input))
     end FOR
     PUSHBACK(commands, LQR(current_pose, START(current_horizon), reference_input))
@@ -46,7 +46,7 @@ control_command func LQR(current_pose, goal_pose, reference_input)
     return control_command
 end func
 ```
-
+### Notes on tuning the MPC 
 
 ## Dependancies
 - ROS Kinetic Kame 
@@ -92,7 +92,7 @@ catkin_make_isolated
 ## Usage
 
 
-##### source current workspace
+##### source current workspace in required terminals
 ```bash
 cd catkin_ws 
 source devel/setup.bash
@@ -100,6 +100,9 @@ source devel/setup.bash
 
 Record Path
 ```bash
+roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
+
+eaxmple: 
 roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
 ```
 ##### open a new terminal for teleoperation 
@@ -115,7 +118,15 @@ roslaunch udacity_proj_pkg udacity_project.launch
 
 ##### This command should open an Rviz GUI window showing the greeen path as the reference path, blue as the true tracked path and red is the predicted path in the current look ahead time horizon
 
+Note: If this error pops up: 
 
+``` ModuleNotFoundError: No module named 'rospkg'
+```
+please run 
+
+```
+pip install rospkg
+```
 ## CodeBase
 
 #### Record path
@@ -158,8 +169,6 @@ This application has two modes of operation - 1. Recording a path 2. Tracking th
 When recording a path, the location of the *.txt file storing the path is passed as an argument. A teleoperation node is used to control the robot and the path traced while manually teleoperating is stored in the *.txt file. During this operation, one can see the recorded path and current pose of the robot in the Rviz GUI.
 
 When tracking the path, the location of *.txt file containing the recorded path is entererd in the params .yaml file, which also contains the parameters used to tune the algorithm. While tracking, the robot's state is queried from gazebo and therefore we have the complete access to the robot's true state. During this mode, one can see the reference path, tracked path and the predicted path in the current time horizon in Rviz GUI. This mode also leverages concurrency by running a parallel thread to compute the predicted path in the current timehorizon and publishes it. To synchronize this operation, a concurrent message queue is used. 
-
-Few of the rubrics addressed are, 
 | Rubric Addressed 	| Location 	|
 |-	|-	|
 | Concurrency:<br>The project uses multithreading. 	| PathTracker.cpp Line 65<br>LQR.cpp Line 122 	|
@@ -167,7 +176,8 @@ Few of the rubrics addressed are,
 | OOP:<br>Overloaded functions allow the same function to operate on different parameters 	| LQR.cpp Line 164, 178 	|
 | OOP: <br>Classes encapsulate behavior. 	| LQR.h Line 37,<br>PathTracker.h Line 23, 64,<br>ParseParam.h Line 11 , <br>GazeboROS.h Line 12 	|
 | OOP:<br>Classes follow an appropriate inheritance hierarchy. 	| PathTracker.h Line 23, 64<br>LQR.h  Line 37 	|
-
+| Loops, functions, I/O:<br>The project reads data from a file and process the data, or the program writes data to a file 	| PathTracker.h Line 32 ,<br><br>GazeboROS.h Line 17, 	|
+| Loop, functions, I/O:<br>The project accepts user input and processes the input. 	| RecordPath.cpp Line 16 	|
 
 
 ## Contributing

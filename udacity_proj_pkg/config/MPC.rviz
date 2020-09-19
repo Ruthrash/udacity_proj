@@ -9,7 +9,6 @@ Panels:
         - /TF1/Frames1
         - /RobotModel1
         - /Path1
-        - /Path1/Status1
         - /Pose1
       Splitter Ratio: 0.681457996
     Tree Height: 740
@@ -157,7 +156,7 @@ Visualization Manager:
       Radius: 0.0299999993
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
-      Topic: /robot_recorded_path
+      Topic: /reference_path
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -172,7 +171,7 @@ Visualization Manager:
       Shaft Length: 0.100000001
       Shaft Radius: 0.0500000007
       Shape: Axes
-      Topic: /robot_pose
+      Topic: /current_pose
       Unreliable: false
       Value: true
   Enabled: true
@@ -200,7 +199,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.05447865
+      Distance: 2.77608252
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -215,10 +214,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.984797776
+      Pitch: 0.684798002
       Target Frame: velodyne
       Value: Orbit (rviz)
-      Yaw: 0.444204271
+      Yaw: 5.92738962
     Saved: ~
 Window Geometry:
   Displays:
@@ -236,5 +235,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1222
-  X: 698
-  Y: 24
+  X: 502
+  Y: -15
