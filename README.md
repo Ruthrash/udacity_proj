@@ -149,8 +149,8 @@ pip install rospkg
     - PathTrackerROS class
         - Encapsulates ROS stuff related to path tracking. Publishes control command, current pose, and tracked, reference, and predicted paths. 
 
-- LQR.cpp
-    - LQR class (public ParseParam)
+- LQR.cpp(public ParseParam)
+    - LQR class 
         - This class contains the method to get current control command and also runs a thread to compute predicted path based on the computed control commands for the current time horizon.
         - contains a message queue object used for synchronization.
         - Inherits from ParseParam
@@ -184,6 +184,5 @@ When tracking the path, the location of *.txt file containing the recorded path 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 
-## References
-- [CSC2621 2019 course notes, Florian Shkurti ](http://www.cs.toronto.edu/~florian/courses/imitation_learning/lectures/Lecture2.pdf)
-- [Optimal Control for Linear Dynamical Systems and Quadratic Cost, Pieter Abbeel](https://people.eecs.berkeley.edu/~pabbeel/cs287-fa12/slides/LQR.pdf)
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
