@@ -96,7 +96,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
 	K = GetKMatrix(A , B , prev_P);
-	K = 10*K;
+	K = 8*K;
 	P = GetPMatrix(A , B , K , prev_P);
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 

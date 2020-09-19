@@ -46,7 +46,7 @@ control_command func LQR(current_pose, goal_pose, reference_input)
     return control_command
 end func
 ```
-
+### Notes on tuning the MPC 
 
 ## Dependancies
 - ROS Kinetic Kame 
@@ -92,7 +92,7 @@ catkin_make_isolated
 ## Usage
 
 
-##### source current workspace
+##### source current workspace in required terminals
 ```bash
 cd catkin_ws 
 source devel/setup.bash
@@ -100,6 +100,9 @@ source devel/setup.bash
 
 Record Path
 ```bash
+roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
+
+eaxmple: 
 roslaunch udacity_proj_pkg record_path.launch file_name:="/path/to/store/recorded_path.txt" 
 ```
 ##### open a new terminal for teleoperation 
@@ -115,7 +118,15 @@ roslaunch udacity_proj_pkg udacity_project.launch
 
 ##### This command should open an Rviz GUI window showing the greeen path as the reference path, blue as the true tracked path and red is the predicted path in the current look ahead time horizon
 
+Note: If this error pops up: 
 
+``` ModuleNotFoundError: No module named 'rospkg'
+```
+please run 
+
+```
+pip install rospkg
+```
 ## CodeBase
 
 #### Record path
