@@ -1,8 +1,21 @@
 recorded_path_file : "/home/workspace/catkin_ws/src/udacity_proj/udacity_proj_pkg/path/ramp_path.txt"
+
+# weight matrix for penalizing state error while tracking [x,y,theta]
 Q_matrix_diag : "700.0, 700.0 ,900.0"
+
+#weight matrix for penalizing input error while tracking[v, omega]
 R_matrix_diag : "3000.0, 3000.0"
+
+#[x,y,theta]
 state_dimension_length : "3"
+#[v,omega] 
 input_dimension_length : "2"
+
+#sampling steps in the time horizon
 sampling_period : "1.5"
+
+#length of time horizon
 time_window : "25"
-gain_compensation: "1.01"
+
+#increases reactivity of tracking
+gain_compensation: "1.08"
