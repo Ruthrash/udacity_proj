@@ -31,11 +31,15 @@ LQR::LQR(const ros::NodeHandle &node_) //: time_window{30}, sampling_period{2} ,
 		
 	node_.getParam("input_dimension_length", dummy);
 	input_dimension_length = ParseParam::ConvertStringToDouble(dummy);
+  
+  	node_.getParam("gain_compensation", dummy);
+	gain_compensation = ParseParam::ConvertStringToDouble(dummy);
 
 	std::cout<<"!!!PARAMSS!!!\n"<<input_dimension_length<<",\n"
 							  <<state_dimension_length<<",\n"
 							  <<sampling_period<<",\n"
 							  <<time_window<<",\n"
+      						  <<gain_compensation<<",\n"
 							  <<Q<<",\n"
 							  <<R<<"\n";
 
@@ -96,7 +100,7 @@ CmdVel LQR::LQRControl(const std::vector<geometry_msgs::PoseStamped>::const_iter
 	A = GetAMatrix(end_of_horizon_it , LQR::time_window);
 	B = GetBMatrix(end_of_horizon_it , LQR::time_window);
 	K = GetKMatrix(A , B , prev_P);
-	K = 8*K;
+	K = LQR::gain_compensation*K;
 	P = GetPMatrix(A , B , K , prev_P);
 
 	Eigen::VectorXd reference_state_vec(state_dimension_length); 	Eigen::VectorXd reference_cmd_vec(input_dimension_length); 

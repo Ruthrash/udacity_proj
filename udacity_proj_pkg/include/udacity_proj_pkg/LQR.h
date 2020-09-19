@@ -56,8 +56,8 @@ protected:
 	double sampling_period;
 	double GetGoalDistance();
 	nav_msgs::Path receding_horiz_path;
-	std::thread waiting_thread;
-	std::thread computation_thread;  
+    double gain_compensation;
+
 
 	
 	
