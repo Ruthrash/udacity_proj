@@ -55,7 +55,7 @@ end func
 - Eigen
 - Jackal Simulation
 - turtlebot_teleop(Optional, teleoperation to record reference path)
-- rospkg(required to run in Udacity workspace)
+
 
 ## Installation
 Install dependancies 
@@ -81,11 +81,6 @@ sudo apt-get install ros-kinetic-jackal-simulator
 sudo apt-get install ros-kinetic-turtlebot-teleop
 ```
 
-
-##### rospkg
-```bash
-pip install rospkg
-```
 
 catkin_make is used to build the package. We therefore have to follow ROS workspace structure of directory
 ##### Create a ROS workspace, pull and build the code
@@ -135,22 +130,14 @@ please run
 ```
 pip install rospkg
 ```
-## Expected Behavior and Rubrics
+## Expected Behavior and Rubrics(for evaluation by Udacity)
 
 This application has two modes of operation - 1. Recording a path 2. Tracking the path. And instructions on how to run both the modes can be seen in "Usage". 
 
 When recording a path, the location of the *.txt file storing the path is passed as an argument. A teleoperation node is used to control the robot and the path traced while manually teleoperating is stored in the *.txt file. During this operation, one can see the recorded path and current pose of the robot in the Rviz GUI.
 
 When tracking the path, the location of *.txt file containing the recorded path is entererd in the params .yaml file, which also contains the parameters used to tune the algorithm. While tracking, the robot's state is queried from gazebo and therefore we have the complete access to the robot's true state. During this mode, one can see the reference path, tracked path and the predicted path in the current time horizon in Rviz GUI. This mode also leverages concurrency by running a parallel thread to compute the predicted path in the current timehorizon and publishes it. To synchronize this operation, a concurrent message queue is used. 
-| Rubric Addressed 	| Location 	|
-|-	|-	|
-| Concurrency:<br>The project uses multithreading. 	| PathTracker.cpp Line 65<br>LQR.cpp Line 122 	|
-| Concurrency:<br>A condition variable is used in the project. 	| LQR.cpp Line 264, 249<br>Used in a concurrent message queue  	|
-| OOP:<br>Overloaded functions allow the same function to operate on different parameters 	| LQR.cpp Line 164, 178 	|
-| OOP: <br>Classes encapsulate behavior. 	| LQR.h Line 37,<br>PathTracker.h Line 23, 64,<br>ParseParam.h Line 11 , <br>GazeboROS.h Line 12 	|
-| OOP:<br>Classes follow an appropriate inheritance hierarchy. 	| PathTracker.h Line 23, 64<br>LQR.h  Line 37 	|
-| Loops, functions, I/O:<br>The project reads data from a file and process the data, or the program writes data to a file 	| PathTracker.h Line 32 ,<br><br>GazeboROS.h Line 17, 	|
-| Loop, functions, I/O:<br>The project accepts user input and processes the input. 	| RecordPath.cpp Line 16 	|
+
 
 ## CodeBase
 
