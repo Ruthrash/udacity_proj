@@ -46,7 +46,7 @@ control_command func LQR(current_pose, goal_pose, reference_input)
     return control_command
 end func
 ```
-### Notes on tuning the MPC 
+
 
 ## Dependancies
 - ROS Kinetic Kame 
@@ -176,6 +176,12 @@ When tracking the path, the location of *.txt file containing the recorded path 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
+### To do
+- Doxygen documentation
+- write test cases using example reference paths
+- Iterative version of LQR
+- Use dynamic model instead of kinetic
+- Use non-linear solvers to incorporate constraints
 
 ## References
 - [CSC2621 2019 course notes, Florian Shkurti ](http://www.cs.toronto.edu/~florian/courses/imitation_learning/lectures/Lecture2.pdf)
