@@ -1,6 +1,6 @@
 ## Video 
 
-[![Watch the video](https://github.com/Ruthrash/udacity_proj/blob/master/thumnail.png)]([https://youtu.be/vt5fpE0bzSY](https://www.youtube.com/watch?v=QZjlcsgegM4&list=TLGGnr1uvdBcjNUwMzA0MjAyMw&ab_channel=RuthrashHari ))
+[![Watch the video](https://github.com/Ruthrash/udacity_proj/blob/master/thumnail.png)]([https://youtu.be/vt5fpE0bzSY](https://www.youtube.com/watch?v=QZjlcsgegM4&list=TLGGnr1uvdBcjNUwMzA0MjAyMw&ab_channel=RuthrashHari )
 
 ## Description
 
