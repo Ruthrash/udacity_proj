@@ -1,6 +1,6 @@
 ## Video 
 
-[![Video](thumbnail.png)](https://youtu.be/QZjlcsgegM4?list=TLGGnr1uvdBcjNUwMzA0MjAyMw)
+![thumbnail.png](https://youtu.be/QZjlcsgegM4?list=TLGGnr1uvdBcjNUwMzA0MjAyMw)
 
 ## Description
 
