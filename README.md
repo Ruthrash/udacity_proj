@@ -1,7 +1,6 @@
 ## Video 
 
-![thumbnail.png](https://youtu.be/QZjlcsgegM4?list=TLGGnr1uvdBcjNUwMzA0MjAyMw)
-
+[![IMAGE ALT TEXT](thumbnail.png)](http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE "Video Title")
 ## Description
 
 A ROS Package for running an MPC Path Tracking controller(LQR in the backend) for a differential-drive robot tested in Gazebo simulation. Capstone project for Udacity C++ Nanodegree. Details on how to use the ROS package is mentioned here. You can also find below a brief description of the LQR controller and some information on how to tune it. This project was built and tested in Ubuntu 16.04 and ROS Kinetic + Gazebo7. 
